@@ -1,0 +1,43 @@
+{
+  "name": "speedi",
+  "version": "0.1.0",
+  "description": "Speedy, all-in-one web application framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/behroozk/speedi.git"
+  },
+  "keywords": [],
+  "author": "Behrooz Kamali",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/behroozk/speedi/issues"
+  },
+  "homepage": "https://github.com/behroozk/speedi#readme",
+  "devDependencies": {
+    "@types/body-parser": "^1.16.8",
+    "@types/compression": "0.0.35",
+    "@types/express": "^4.0.39",
+    "@types/helmet": "0.0.37",
+    "@types/joi": "^13.0.0",
+    "@types/jsonwebtoken": "^7.2.3",
+    "@types/morgan": "^1.7.35",
+    "@types/node": "^8.0.53",
+    "@types/redis": "^2.8.1",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.1"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "compression": "^1.7.1",
+    "express": "^4.16.2",
+    "helmet": "^3.9.0",
+    "joi": "^13.0.2",
+    "jsonwebtoken": "^8.1.0",
+    "morgan": "^1.9.0",
+    "redis": "^2.8.0"
+  }
+}
