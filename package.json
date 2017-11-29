@@ -1,9 +1,11 @@
 {
   "name": "speedi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Speedy, all-in-one web application framework",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "prepublish": "tsc -p tsconfig_npm.json",
+    "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,7 +30,7 @@
     "@types/node": "^8.0.53",
     "@types/redis": "^2.8.1",
     "tslint": "^5.8.0",
-    "typescript": "^2.6.1"
+    "typescript": "^2.6.2"
   },
   "dependencies": {
     "body-parser": "^1.18.2",
