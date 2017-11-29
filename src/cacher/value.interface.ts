@@ -1,4 +1,4 @@
-export default interface ICachedValue {
+export interface ICachedValue {
     header: string;
     body: object;
 }

@@ -1,10 +1,10 @@
 import * as express from 'express';
-import DataStore from '../data_store/';
-import Logger from '../logger/';
-import ICacherOptions from './options.interface';
-import ICachedValue from "./value.interface";
+import { DataStore } from '../data_store/';
+import { Logger } from '../logger/';
+import { ICacherOptions } from './options.interface';
+import { ICachedValue } from "./value.interface";
 
-export default class Cacher {
+export class Cacher {
     public static retrieveOrCache({
         expire = 60,
         authBased = false,

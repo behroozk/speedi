@@ -1,5 +1,5 @@
 import * as express from 'express';
-import DataStore from '../data_store/index';
+import { DataStore } from '../data_store/index';
 import { ErrorHandler } from '../error_handler/';
 import { IRateLimiterOptions } from './options.interface';
 

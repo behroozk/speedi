@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { Authentication } from '../authentication/';
-import Cacher from '../cacher/';
+import { Cacher } from '../cacher/';
 import { PayloadValidator } from '../payload_validator/';
 import { RateLimiter } from '../rate_limitter/';
 import { RouteMethod } from './method.enum';

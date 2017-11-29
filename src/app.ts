@@ -8,7 +8,7 @@ import CONFIG from './config/config';
 import { Route } from './route/';
 import { IRouteOptions } from './route/options.interface';
 
-export default class App {
+export class App {
     private readonly app: express.Express;
     private server: http.Server;
 

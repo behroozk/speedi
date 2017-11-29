@@ -1,9 +1,9 @@
 import CONFIG from '../config/config';
-import Logger from '../logger/';
-import IDataStoreClient from './client_interface';
-import RedisClient from './redis';
+import { Logger } from '../logger/';
+import { IDataStoreClient } from './client_interface';
+import { RedisClient } from './redis';
 
-export default class DataStore {
+export class DataStore {
     private client: IDataStoreClient;
 
     private prefix: string;

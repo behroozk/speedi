@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 import CONFIG from '../config/config';
 import { ErrorHandler } from '../error_handler/';
-import Logger from '../logger/';
+import { Logger } from '../logger/';
 import { IAuthenticationOptions } from './options.interface';
 import { IAuthenticationToken } from './token.interface';
 

@@ -1,4 +1,4 @@
-export default interface IDataStoreClient {
+export interface IDataStoreClient {
     get(key: string): Promise<string | null>;
     set(ket: string, value: string): Promise<string>;
     del(key: string): Promise<boolean>;

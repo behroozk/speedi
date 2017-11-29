@@ -1,4 +1,4 @@
-export default interface ICacherOptions {
+export interface ICacherOptions {
     expire: number;
     authBased: boolean;
 }
