@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as Joi from 'joi';
-import { ErrorHandler } from '../error_handler/';
+import { ErrorHandler } from '../error/handler';
 import { IPayloadValidatorOptions } from './options.interface';
 
 export class PayloadValidator {
