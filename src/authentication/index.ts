@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 import CONFIG from '../config/config';
-import { ErrorHandler } from '../error_handler/';
+import { ErrorHandler } from '../error/handler';
 import { Logger } from '../logger/';
 import { IAuthenticationOptions } from './options.interface';
 import { IAuthenticationToken } from './token.interface';
@@ -25,51 +25,51 @@ export class Authentication {
     public static verify(options: IAuthenticationOptions): express.RequestHandler {
         return (req: express.Request, res: express.Response, next: express.NextFunction) => {
             const encodedToken = (req.get('Authorization') || '').split(' ')[1];
-            const token = Authentication.decode(encodedToken);
+            const authentication = Authentication.decode(encodedToken);
 
-            if (!token) {
+            if (!authentication) {
                 ErrorHandler.unauthorized(res);
-            } else if (!token.rolesExist(options.roles)) {
+            } else if (!authentication.rolesExist(options.roles)) {
                 ErrorHandler.forbidden(res);
-            } else if (!token.isTokenTimeValid()) {
+            } else if (!authentication.isTokenTimeValid()) {
                 ErrorHandler.unauthorized(res, 'reauthentication required');
-            } else if (options.customAuthenticator && !options.customAuthenticator(token.data)) {
+            } else if (options.customAuthenticator && !options.customAuthenticator(authentication.token)) {
                 ErrorHandler.unauthorized(res, 'custom authentication failed');
             } else {
                 if (options.renewToken) {
-                    token.renewLastAccess();
+                    authentication.renewLastAccess();
                 }
 
-                res.locals.authenticationToken = token;
+                res.locals.authenticationToken = authentication;
                 next();
             }
         };
     }
 
-    constructor(private data: IAuthenticationToken) { }
+    constructor(public token: IAuthenticationToken) { }
 
     public sign(): string {
-        return jwt.sign(this.data, CONFIG.app.secetKey);
+        return jwt.sign(this.token, CONFIG.app.secetKey);
     }
 
     public renewLastAccess(): Authentication {
-        this.data.lastAccess = Date.now();
+        this.token.lastAccess = Date.now();
         return this;
     }
 
     public rolesExist(roles: string[]): boolean {
-        if (!this.data.roles) {
+        if (!this.token.roles) {
             return false;
         }
 
         for (const role of roles) {
-            if (this.data.roles.indexOf(role) < 0) { return false; }
+            if (this.token.roles.indexOf(role) < 0) { return false; }
         }
 
         return true;
     }
 
     public isTokenTimeValid(): boolean {
-        return this.data.lastAccess + CONFIG.app.tokenLifeTime > Date.now();
+        return this.token.lastAccess + CONFIG.app.tokenLifeTime > Date.now();
     }
 }
