@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { Authentication } from '../authentication/';
 import { DataStore } from '../data_store/';
 import { Logger } from '../logger/';
 import { ICacherOptions } from './options.interface';
@@ -12,8 +13,9 @@ export class Cacher {
         return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
             let key = `cache_${req.ip}_${req.method}_${req.originalUrl}`;
 
-            if (authBased) {
-                key += '_' + res.locals.verifiedUser;
+            if (authBased && res.locals.authentication) {
+                const authentication: Authentication = res.locals.authentication;
+                key += '_' + JSON.stringify(authentication.token);
             }
 
             try {
