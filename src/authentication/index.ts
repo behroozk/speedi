@@ -1,7 +1,7 @@
-import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 import CONFIG from '../config/config';
-import { ErrorHandler } from '../error/handler';
+import { RequestError } from '../error/request';
+import { ErrorType } from '../error/type.enum';
 import { Logger } from '../logger/';
 import { IAuthenticationOptions } from './options.interface';
 import { IAuthenticationToken } from './token.interface';
@@ -22,28 +22,24 @@ export class Authentication {
         }
     }
 
-    public static verify(options: IAuthenticationOptions): express.RequestHandler {
-        return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            const encodedToken = (req.get('Authorization') || '').split(' ')[1];
-            const authentication = Authentication.decode(encodedToken);
+    public static verify(encodedToken: string, options: IAuthenticationOptions): Authentication {
+        const authentication = Authentication.decode(encodedToken);
 
-            if (!authentication) {
-                ErrorHandler.unauthorized(res);
-            } else if (!authentication.rolesExist(options.roles)) {
-                ErrorHandler.forbidden(res);
-            } else if (!authentication.isTokenTimeValid()) {
-                ErrorHandler.unauthorized(res, 'reauthentication required');
-            } else if (options.customAuthenticator && !options.customAuthenticator(authentication.token)) {
-                ErrorHandler.unauthorized(res, 'custom authentication failed');
-            } else {
-                if (options.renewToken) {
-                    authentication.renewLastAccess();
-                }
+        if (!authentication) {
+            throw new RequestError(ErrorType.Unauthorized);
+        } else if (!authentication.rolesExist(options.roles)) {
+            throw new RequestError(ErrorType.Forbidden);
+        } else if (!authentication.isTokenTimeValid()) {
+            throw new RequestError(ErrorType.Unauthorized, 'reauthentication required');
+        } else if (options.customAuthenticator && !options.customAuthenticator(authentication.token)) {
+            throw new RequestError(ErrorType.Unauthorized, 'custom authentication failed');
+        }
 
-                res.locals.authenticationToken = authentication;
-                next();
-            }
-        };
+        if (options.renewToken) {
+            authentication.renewLastAccess();
+        }
+
+        return authentication;
     }
 
     constructor(public token: IAuthenticationToken) { }
