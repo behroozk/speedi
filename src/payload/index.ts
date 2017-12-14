@@ -1,4 +1,3 @@
-import * as express from 'express';
 import * as Joi from 'joi';
 import { RequestError } from '../error/request';
 import { ErrorType } from '../error/type.enum';

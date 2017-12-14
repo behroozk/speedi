@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { IRpcRequest } from '../rpc/request.interface';
 
 export interface IRateLimiterOptions {
     duration: number;
@@ -6,5 +7,6 @@ export interface IRateLimiterOptions {
     maximumDelay: number;
     allowedBeforeLimit: number;
     message?: string;
-    keyGenerator?: (req: express.Request) => string;
+    keyGenerator?: (req: express.Request | IRpcRequest) => string;
+    key: string;
 }
