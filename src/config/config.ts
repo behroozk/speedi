@@ -1,6 +1,15 @@
 import * as process from 'process';
 
 const CONFIG = {
+    amqp: {
+        host: process.env.AMQP_HOST || '127.0.0.1',
+        password: process.env.AMQP_PASSWORD || 'guest',
+        port: process.env.AMQP_PORT || '5672',
+        protocol: process.env.AMQP_PROTOCOL || 'amqp',
+        queueName: process.env.AMQP_QUEUE || 'local_test_queue',
+        username: process.env.AMQP_USERNAME || 'guest',
+    },
+
     app: {
         host: process.env.SPEEDI_HOST || '127.0.0.1',
         port: process.env.SPEEDI_PORT || '9000',
