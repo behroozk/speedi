@@ -1,10 +1,10 @@
 import * as amqp from 'amqplib';
 import * as Logger from 'console';
 import * as uuid from 'uuid/v4';
+
 import { Ip } from '../util/ip';
 import { IRpcOptions } from './options.interface';
-import { IRpcRequest } from './request.interface';
-import { IRpcSenderRequest } from './sender_request.interface';
+import { IRpcRequest, IRpcSenderRequest } from './request.interface';
 
 export class RpcSender {
     public static send({
@@ -21,14 +21,16 @@ export class RpcSender {
             throw new Error('neither processor name nor method/path are set');
         }
 
+        const ips = Ip.get();
         const request: IRpcRequest = {
-            encodedAuthentication: authenticationToken,
-            ip: Ip.get()[0].ip,
+            authenticationToken,
+            ip: ips.length ? ips[0].ip : undefined,
             method,
             name,
             path,
             payload: payload || {},
             response: {},
+            service,
         };
 
         this.channel.sendToQueue(

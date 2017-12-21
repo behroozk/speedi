@@ -2,15 +2,19 @@ import { RouteMethod } from '../../index';
 import { Authentication } from '../authentication/index';
 import { IRpcResponse } from './response.interface';
 
-export interface IRpcRequest {
+export interface IRpcSenderRequest {
+    service: string;
     name?: string;
     method?: RouteMethod;
     path?: string;
+    authenticationToken?: string;
+    payload?: any;
+}
+
+export interface IRpcRequest extends IRpcSenderRequest {
     ip?: string;
     originalUrl?: string;
-    encodedAuthentication?: string;
     authentication?: Authentication;
-    payload: any;
     cacheResponseOptions?: {
         expire: number;
         key: string;
