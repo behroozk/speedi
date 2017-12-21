@@ -1,10 +1,11 @@
 import * as redis from 'redis';
-import CONFIG from '../config/config';
+
+import Config from '../config/config';
 import { Logger } from '../logger/';
-import { IDataStoreClient } from './client_interface';
+import { IDataStoreClient } from './client.interface';
 
 export class RedisClient implements IDataStoreClient {
-    private client = redis.createClient(Number(CONFIG.redis.port), CONFIG.redis.host);
+    private client = redis.createClient(Number(Config.redis.port), Config.redis.host);
 
     public get(key: string): Promise<string | null> {
         return new Promise((resolve, reject) => {

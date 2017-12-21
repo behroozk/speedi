@@ -1,6 +1,6 @@
-import CONFIG from '../config/config';
+import Config from '../config/config';
 import { Logger } from '../logger/';
-import { IDataStoreClient } from './client_interface';
+import { IDataStoreClient } from './client.interface';
 import { RedisClient } from './redis';
 
 export class DataStore {
@@ -8,12 +8,12 @@ export class DataStore {
 
     private prefix: string;
 
-    constructor(additionalPrefix = '') {
+    constructor(namespace = '') {
         this.prefix =
-            (CONFIG.dataStore.prefix ? `${CONFIG.dataStore.prefix}_` : '') +
-            (additionalPrefix ? `${additionalPrefix}_` : '');
+            (Config.dataStore.prefix ? `${Config.dataStore.prefix}_` : '') +
+            (namespace ? `${namespace}_` : '');
 
-        if (CONFIG.dataStore.type === 'redis') {
+        if (Config.dataStore.type === 'redis') {
             this.client = new RedisClient();
         } else {
             Logger.error('Unknown data store client');
