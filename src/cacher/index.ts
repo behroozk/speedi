@@ -1,9 +1,12 @@
 import { DataStore } from '../data_store/';
 import { Logger } from '../logger/';
-import { ICachedValue } from "./value.interface";
+import { ICachedValue } from './value.interface';
 
 export class Cacher {
     public static async retrieve(key: string): Promise<ICachedValue | null> {
+        if (!Cacher.dataStore) {
+            Cacher.dataStore = new DataStore('cache');
+        }
 
         try {
             const value = await Cacher.dataStore.get(key);
@@ -26,12 +29,16 @@ export class Cacher {
     }
 
     public static async store(key: string, value: ICachedValue, expire: number): Promise<boolean> {
+        if (!Cacher.dataStore) {
+            Cacher.dataStore = new DataStore('cache');
+        }
+
         // TODO: combine set and expire in one method
         Cacher.dataStore.set(key, JSON.stringify(value));
         return Cacher.dataStore.expire(key, expire);
     }
 
-    private static dataStore = new DataStore('cache');
+    private static dataStore: DataStore;
 
     private static parseCachedResponse(key: string, cahcedValue: string): ICachedValue | Error {
         let parsedCachedValue: ICachedValue;

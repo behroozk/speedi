@@ -13,6 +13,10 @@ export class RateLimiter {
         message = 'Too many requests, please try again later',
         key,
     }: IRateLimiterOptions): Promise<IRateLimitterOutput | null> {
+        if (!RateLimiter.dataStore) {
+            RateLimiter.dataStore = new DataStore('ratelimit');
+        }
+
         try {
             const requests = await RateLimiter.dataStore.unshift(key, Date.now().toString());
             if (requests > allowedBeforeLimit) {
@@ -47,5 +51,5 @@ export class RateLimiter {
         }
     }
 
-    private static dataStore = new DataStore('ratelimit');
+    private static dataStore: DataStore;
 }
