@@ -1,23 +1,22 @@
-import * as express from 'express';
 import * as Joi from 'joi';
 import * as pathRegex from 'path-to-regexp';
+
 import { Authentication } from '../authentication/index';
 import { IAuthenticationOptions } from '../authentication/options.interface';
 import { Cacher } from '../cacher/index';
 import { ICacherOptions } from '../cacher/options.interface';
 import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
-import { ErrorType } from '../error/type.enum';
 import { Payload } from '../payload/index';
 import { RateLimiter } from '../rate_limitter/index';
 import { IRateLimiterOptions } from '../rate_limitter/options.interface';
 import { IRouteOptions } from '../route/options.interface';
-import { IRpcRequest } from './request.interface';
-import { IRpcResponse } from './response.interface';
+import { IRpcRequest } from '../rpc/request.interface';
+import { IRpcResponse } from '../rpc/response.interface';
 
-export class RpcHandler {
-    public static generate(options: IRouteOptions): RpcHandler {
-        const rpcHandler = new RpcHandler(options);
+export class RpcRoute {
+    public static generate(options: IRouteOptions): RpcRoute {
+        const rpcHandler = new RpcRoute(options);
 
         return rpcHandler;
     }
@@ -38,7 +37,7 @@ export class RpcHandler {
     private static authentication(options: IAuthenticationOptions): RpcMiddleware {
         return async (req: IRpcRequest): Promise<IRpcRequest> => {
             req.authentication = Authentication.verify(
-                (req.encodedAuthentication || '').split(' ')[1],
+                (req.authenticationToken || '').split(' ')[1],
                 options,
             );
 
@@ -183,24 +182,24 @@ export class RpcHandler {
 
     private setupHandlers(): void {
         if (this.options.authentication) {
-            this.middlewares.push(RpcHandler.authentication(this.options.authentication));
+            this.middlewares.push(RpcRoute.authentication(this.options.authentication));
         }
 
-        this.middlewares.push(RpcHandler.payloadSetup());
+        this.middlewares.push(RpcRoute.payloadSetup());
 
         if (this.options.validate) {
-            this.middlewares.push(RpcHandler.payloadValidate(this.options.validate));
+            this.middlewares.push(RpcRoute.payloadValidate(this.options.validate));
         }
 
         if (this.options.rateLimit) {
-            this.middlewares.push(RpcHandler.rateLimiter(this.options.rateLimit));
+            this.middlewares.push(RpcRoute.rateLimiter(this.options.rateLimit));
         }
 
         if (this.options.cache) {
-            this.middlewares.push(RpcHandler.cacher(this.options.cache));
+            this.middlewares.push(RpcRoute.cacher(this.options.cache));
         }
 
-        this.middlewares.push(RpcHandler.controller(this.options.controller));
+        this.middlewares.push(RpcRoute.controller(this.options.controller));
     }
 }
 
