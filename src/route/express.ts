@@ -1,18 +1,33 @@
 import * as express from 'express';
 import * as Joi from 'joi';
-import { Authentication } from '../authentication/';
+
+import { Authentication } from '../authentication/index';
 import { IAuthenticationOptions } from '../authentication/options.interface';
-import { Cacher } from '../cacher/';
+import { Cacher } from '../cacher/index';
 import { ICacherOptions } from '../cacher/options.interface';
 import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
 import { Payload } from '../payload/index';
-import { RateLimiter } from '../rate_limitter/';
+import { RateLimiter } from '../rate_limitter/index';
 import { IRateLimiterOptions } from '../rate_limitter/options.interface';
 import { RouteMethod } from './method.enum';
 import { IRouteOptions } from './options.interface';
 
-export class Route {
+export class RouteExpress {
+    public static generate(routeObjects: IRouteOptions | IRouteOptions[]): express.Router {
+        const router = express.Router();
+
+        if (!Array.isArray(routeObjects)) {
+            return this.setupRoute(router, routeObjects);
+        } else {
+            for (const routeObject of routeObjects) {
+                this.setupRoute(router, routeObject);
+            }
+        }
+
+        return router;
+    }
+
     private static extractErrorData(error: Error): { status: number, message: string, metadata: any } {
         let status: number = 500;
         const message = error.message;
@@ -36,7 +51,7 @@ export class Route {
 
                 return next();
             } catch (error) {
-                const { status, message, metadata } = Route.extractErrorData(error);
+                const { status, message, metadata } = RouteExpress.extractErrorData(error);
 
                 return res.status(status).send({ message, metadata }).end();
             }
@@ -50,7 +65,7 @@ export class Route {
 
                 return next();
             } catch (error) {
-                const { status, message, metadata } = Route.extractErrorData(error);
+                const { status, message, metadata } = RouteExpress.extractErrorData(error);
 
                 return res.status(status).send({ message, metadata }).end();
             }
@@ -64,7 +79,7 @@ export class Route {
 
                 return next();
             } catch (error) {
-                const { status, message, metadata } = Route.extractErrorData(error);
+                const { status, message, metadata } = RouteExpress.extractErrorData(error);
 
                 return res.status(status).send({ message, metadata }).end();
             }
@@ -93,7 +108,7 @@ export class Route {
 
                 return next();
             } catch (error) {
-                const { status, message, metadata } = Route.extractErrorData(error);
+                const { status, message, metadata } = RouteExpress.extractErrorData(error);
 
                 return res.status(status).send({ message, metadata }).end();
             }
@@ -112,7 +127,7 @@ export class Route {
 
                 const cachedResponse = await Cacher.retrieve(key);
                 if (!cachedResponse) {
-                    Route.storeResponse(res);
+                    RouteExpress.storeResponse(res);
                     res.on('finish', () => {
                         if (res.statusCode === 200 && res.locals.body) {
                             const cache: ICachedValue = {
@@ -128,7 +143,7 @@ export class Route {
                     return res.set('Content-Type', cachedResponse.header).send(cachedResponse.body).end();
                 }
             } catch (error) {
-                const { status, message, metadata } = Route.extractErrorData(error);
+                const { status, message, metadata } = RouteExpress.extractErrorData(error);
 
                 return res.status(status).send({ message, metadata }).end();
             }
@@ -144,29 +159,27 @@ export class Route {
         };
     }
 
-    private router: express.Router = express.Router();
-
-    public setupRoute(routeObject: IRouteOptions): void {
+    private static setupRoute(router: express.Router, routeObject: IRouteOptions): express.Router {
         const middlewares: express.RequestHandler[] = [];
 
         if (routeObject.authentication) {
-            middlewares.push(Route.authentication(routeObject.authentication));
+            middlewares.push(this.authentication(routeObject.authentication));
         }
 
         if (routeObject.payload) {
-            middlewares.push(Route.payloadSetup(routeObject.payload));
+            middlewares.push(this.payloadSetup(routeObject.payload));
         }
 
         if (routeObject.validate) {
-            middlewares.push(Route.payloadValidate(routeObject.validate));
+            middlewares.push(this.payloadValidate(routeObject.validate));
         }
 
         if (routeObject.rateLimit) {
-            middlewares.push(Route.rateLimiter(routeObject.rateLimit));
+            middlewares.push(this.rateLimiter(routeObject.rateLimit));
         }
 
         if (routeObject.cache) {
-            middlewares.push(Route.cacher(routeObject.cache));
+            middlewares.push(this.cacher(routeObject.cache));
         }
 
         middlewares.push(async (
@@ -179,7 +192,7 @@ export class Route {
                     .json(await routeObject.controller.call(null, res.locals.payload))
                     .end();
             } catch (error) {
-                const { status, message, metadata } = Route.extractErrorData(error);
+                const { status, message, metadata } = RouteExpress.extractErrorData(error);
 
                 return res.status(status).send({ message, metadata }).end();
             }
@@ -187,36 +200,24 @@ export class Route {
 
         switch (routeObject.method) {
             case RouteMethod.Get:
-                this.router.get(routeObject.path, middlewares);
+                router.get(routeObject.path, middlewares);
                 break;
             case RouteMethod.Post:
-                this.router.post(routeObject.path, middlewares);
+                router.post(routeObject.path, middlewares);
                 break;
             case RouteMethod.Put:
-                this.router.put(routeObject.path, middlewares);
+                router.put(routeObject.path, middlewares);
                 break;
             case RouteMethod.Patch:
-                this.router.patch(routeObject.path, middlewares);
+                router.patch(routeObject.path, middlewares);
                 break;
             case RouteMethod.Delete:
-                this.router.delete(routeObject.path, middlewares);
+                router.delete(routeObject.path, middlewares);
                 break;
             default:
                 throw new Error(`undefined route method: ${routeObject.method}`);
         }
-    }
 
-    public setupRoutes(routeObjects: IRouteOptions | IRouteOptions[]): void {
-        if (!Array.isArray(routeObjects)) {
-            return this.setupRoute(routeObjects);
-        }
-
-        for (const routeObject of routeObjects) {
-            this.setupRoute(routeObject);
-        }
-    }
-
-    public getRouter(): express.Router {
-        return this.router;
+        return router;
     }
 }
