@@ -1,4 +1,3 @@
-import * as express from 'express';
 import { IAuthenticationToken } from './token.interface';
 
 export interface IAuthenticationOptions {

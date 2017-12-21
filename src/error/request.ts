@@ -1,4 +1,5 @@
 import { STATUS_CODES } from 'http';
+
 import { ErrorType } from './type.enum';
 
 export class RequestError extends Error {
