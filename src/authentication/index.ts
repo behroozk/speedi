@@ -1,5 +1,6 @@
 import * as jwt from 'jsonwebtoken';
-import CONFIG from '../config/config';
+
+import Config from '../config/config';
 import { RequestError } from '../error/request';
 import { ErrorType } from '../error/type.enum';
 import { Logger } from '../logger/';
@@ -9,7 +10,7 @@ import { IAuthenticationToken } from './token.interface';
 export class Authentication {
     public static decode(encodedToken: string): Authentication | null {
         try {
-            const verifiedToken = jwt.verify(encodedToken, CONFIG.app.secetKey) as IAuthenticationToken;
+            const verifiedToken = jwt.verify(encodedToken, Config.authentication.secretKey) as IAuthenticationToken;
 
             if (!verifiedToken.issuedAt || !verifiedToken.lastAccess) {
                 throw new Error('invalid token');
@@ -45,7 +46,7 @@ export class Authentication {
     constructor(public token: IAuthenticationToken) { }
 
     public sign(): string {
-        return jwt.sign(this.token, CONFIG.app.secetKey);
+        return jwt.sign(this.token, Config.authentication.secretKey);
     }
 
     public renewLastAccess(): Authentication {
@@ -66,6 +67,6 @@ export class Authentication {
     }
 
     public isTokenTimeValid(): boolean {
-        return this.token.lastAccess + CONFIG.app.tokenLifeTime > Date.now();
+        return this.token.lastAccess + Config.authentication.tokenLifeTime > Date.now();
     }
 }
