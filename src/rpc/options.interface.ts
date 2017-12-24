@@ -1,8 +1,8 @@
 export interface IRpcOptions {
     host: string;
     password: string;
-    port: string;
+    port: number;
     protocol: string;
-    queueName: string;
+    queueNames: string[];
     username: string;
 }
