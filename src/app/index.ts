@@ -44,7 +44,7 @@ export class App {
                     time: Date.now(),
                 };
             },
-            description: 'test',
+            description: 'health check',
             method: RouteMethod.Get,
             name: 'health',
             path: '/health',
