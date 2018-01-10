@@ -11,17 +11,17 @@ export class Config {
     public static dataStore: IConfigDataStore;
     public static redis: IConfigRedis;
 
-    public static async init(config: any): Promise<void> {
+    public static async init(config: Partial<IConfig>): Promise<void> {
         const result = Joi.validate(config, this.schema);
 
         if (result.error) {
             throw new Error(result.error.message);
         } else {
-            const processedConfig: IConfig = result.value;
+            const processedConfig: IConfig = result.value as IConfig;
             this.setConfig(processedConfig);
 
             if (processedConfig.amqp) {
-                await RpcSender.initialize(processedConfig.amqp);
+                await RpcSender.initialize(processedConfig.amqp as IRpcOptions);
             }
         }
 
@@ -38,7 +38,9 @@ export class Config {
         }).optional(),
         app: Joi.object({
             nodeEnv: Joi.string().optional().default('development'),
-        }).required(),
+        }).optional().default({
+            nodeEnv: 'development',
+        }),
         authentication: Joi.object({
             secretKey: Joi.string().required(),
             tokenLifeTime: Joi.number().optional().default(30 * 24 * 60 * 60 * 1000),
@@ -61,9 +63,9 @@ export class Config {
 
     private static setConfig(config: IConfig): void {
         this.app = config.app;
-        this.amqp = config.amqp;
-        this.authentication = config.authentication;
-        this.dataStore = config.dataStore;
-        this.redis = config.redis;
+        this.amqp = config.amqp as IRpcOptions;
+        this.authentication = config.authentication as IConfigAuthentication;
+        this.dataStore = config.dataStore as IConfigDataStore;
+        this.redis = config.redis as IConfigRedis;
     }
 }
