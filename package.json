@@ -1,6 +1,6 @@
 {
   "name": "speedi",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "description": "Speedy, all-in-one web application framework",
   "main": "dist/index.js",
   "scripts": {
@@ -19,28 +19,29 @@
     "url": "https://github.com/behroozk/speedi/issues"
   },
   "homepage": "https://github.com/behroozk/speedi#readme",
+  "typings": "dist/index.d.ts",
   "devDependencies": {
-    "@types/amqplib": "^0.5.5",
+    "@types/amqplib": "^0.5.6",
     "@types/body-parser": "^1.16.8",
     "@types/compression": "0.0.35",
-    "@types/express": "^4.11.0",
     "@types/helmet": "0.0.37",
-    "@types/joi": "^13.0.3",
     "@types/jsonwebtoken": "^7.2.5",
     "@types/morgan": "^1.7.35",
-    "@types/node": "^8.5.2",
-    "@types/redis": "^2.8.3",
+    "@types/node": "^9.3.0",
+    "@types/redis": "^2.8.4",
     "@types/uuid": "^3.4.3",
     "tslint": "^5.8.0",
     "typescript": "^2.6.2"
   },
   "dependencies": {
+    "@types/express": "^4.11.0",
+    "@types/joi": "^13.0.4",
     "amqplib": "^0.5.2",
     "body-parser": "^1.18.2",
     "compression": "^1.7.1",
     "express": "^4.16.2",
     "helmet": "^3.9.0",
-    "joi": "^13.0.2",
+    "joi": "^13.1.0",
     "jsonwebtoken": "^8.1.0",
     "morgan": "^1.9.0",
     "path-to-regexp": "^2.1.0",
