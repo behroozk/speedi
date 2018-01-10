@@ -1,7 +1,7 @@
 import * as amqp from 'amqplib';
 import * as Logger from 'console';
 
-import Config from '../config/config';
+import { Config } from '../config/config';
 import { IRouteOptions } from '../route/options.interface';
 import { RpcRoute } from '../route/rpc';
 import { IRpcRequest } from '../rpc/request.interface';

@@ -4,7 +4,7 @@ import { IRpcOptions } from '../rpc/options.interface';
 import { RpcSender } from '../rpc/sender';
 import { IConfig, IConfigApp, IConfigAuthentication, IConfigDataStore, IConfigRedis } from './index.interface';
 
-export default class Config {
+export class Config {
     public static app: IConfigApp;
     public static authentication: IConfigAuthentication;
     public static amqp: IRpcOptions;
@@ -37,7 +37,6 @@ export default class Config {
             username: Joi.string().optional().default('guest'),
         }).optional(),
         app: Joi.object({
-            name: Joi.string().required(),
             nodeEnv: Joi.string().optional().default('development'),
         }).required(),
         authentication: Joi.object({
