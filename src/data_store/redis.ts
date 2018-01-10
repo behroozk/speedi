@@ -1,6 +1,6 @@
 import * as redis from 'redis';
 
-import Config from '../config/config';
+import { Config } from '../config/config';
 import { Logger } from '../logger/';
 import { IDataStoreClient } from './client.interface';
 

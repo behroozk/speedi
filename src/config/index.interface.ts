@@ -9,9 +9,6 @@ export interface IConfig {
 }
 
 export interface IConfigApp {
-    host: string;
-    port: number;
-    name: string;
     nodeEnv?: string;
 }
 

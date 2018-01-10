@@ -1,6 +1,6 @@
 import * as jwt from 'jsonwebtoken';
 
-import Config from '../config/config';
+import { Config } from '../config/config';
 import { RequestError } from '../error/request';
 import { ErrorType } from '../error/type.enum';
 import { Logger } from '../logger/';
