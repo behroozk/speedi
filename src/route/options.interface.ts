@@ -11,7 +11,7 @@ export interface IRouteOptions {
     description: string;
     method: RouteMethod;
     path: string;
-    controller: (args: any) => Promise<any>;
+    controller: (...args: any[]) => Promise<any>;
     authentication?: IAuthenticationOptions;
     payload?: (request: express.Request) => any;
     validate?: Joi.SchemaMap;
