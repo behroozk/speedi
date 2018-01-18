@@ -1,6 +1,6 @@
 {
   "name": "speedi",
-  "version": "0.3.7",
+  "version": "0.4.0",
   "description": "Speedy, all-in-one web application framework",
   "main": "dist/index.js",
   "scripts": {
@@ -48,6 +48,6 @@
     "morgan": "^1.9.0",
     "path-to-regexp": "^2.1.0",
     "redis": "^2.8.0",
-    "uuid": "^3.1.0"
+    "uuid": "^3.2.1"
   }
 }
