@@ -13,6 +13,7 @@ export interface IRouteOptions {
     path: string;
     controller: (...args: any[]) => Promise<any>;
     authentication?: IAuthenticationOptions;
+    files?: boolean;
     payload?: (request: express.Request) => any;
     validate?: Joi.SchemaMap;
     rateLimit?: IRateLimiterOptions;

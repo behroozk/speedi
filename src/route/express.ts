@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as Joi from 'joi';
+import * as Multer from 'multer';
 
 import { Authentication } from '../authentication/index';
 import { IAuthenticationOptions } from '../authentication/options.interface';
@@ -164,6 +165,10 @@ export class RouteExpress {
 
         if (routeObject.authentication) {
             middlewares.push(this.authentication(routeObject.authentication));
+        }
+
+        if (routeObject.files) {
+            middlewares.push(Multer().any());
         }
 
         if (routeObject.payload) {

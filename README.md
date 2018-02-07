@@ -121,6 +121,7 @@ interface IRouteOptions {
     path: string;
     controller: (...args: any[]) => Promise<any>;
     authentication?: IAuthenticationOptions;
+    files?: boolean;
     payload?: (request: express.Request) => any;
     validate?: Joi.SchemaMap;
     rateLimit?: IRateLimiterOptions;
@@ -128,7 +129,7 @@ interface IRouteOptions {
 }
 ```
 
-Route method accepts values from `RouteMethod`  enum with the following definition:
+Route method accepts values from `RouteMethod` enum with the following definition:
 
 ```typescript
 enum RouteMethod {
@@ -143,6 +144,8 @@ enum RouteMethod {
 `controller` must be an async function (returns a promise) and it will be called with the object returned from the `payload` function.
 
 `authentication` object should implement the following interface:
+
+`files` item is a boolean value, which if set to true, adds `files` array to the request object in `payload` function. The array will contain attached files with the following fields: `fieldname`, `originalname`, `encoding`, `mimetype`, `size`, and `buffer`.
 
 ```typescript
 interface IAuthenticationOptions {
@@ -187,18 +190,20 @@ app.addRoutes({
         authBased: false,
         expire: 10,
     },
-    controller: async ({ id, name }) => {
+    controller: async ({ files, id, name }) => {
         return {
             id,
-            message: `Hello ${name}!`,
+            message: `Hello ${name}! ${files.length} files received.`,
             timestamp: Date.now(),
         };
     },
     description: 'Get user information',
+    files: true,
     method: RouteMethod.Post,
     name: 'get_user',
     path: '/user/:id',
     payload: (req) => ({
+        files: req.files,
         id: req.params.id,
         name: req.body.name,
     }),
@@ -210,6 +215,7 @@ app.addRoutes({
         maximumDelay: 30 * 1000,
     },
     validate: {
+        files: Joi.array().required(),
         id: Joi.string().required(),
         name: Joi.string().required(),
     },
