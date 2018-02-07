@@ -1,6 +1,7 @@
 src/
 .vscode/
 index.ts
+dist/test
 
 tsconfig.json
 tsconfig_npm.json
