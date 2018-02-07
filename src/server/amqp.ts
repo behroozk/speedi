@@ -9,37 +9,45 @@ import { IServer } from './index.interface';
 import { IRpcServerOptions } from './rpc_options.interface';
 
 export class AmqpServer implements IServer {
-    private connection: amqp.Connection;
-    private channel: amqp.Channel;
+    private connection: amqp.Connection | undefined;
+    private channel: amqp.Channel | undefined;
     private stack: RpcRoute[] = [];
 
     constructor(private options: IRpcServerOptions) { }
 
     public async start(): Promise<boolean> {
-        this.connection = await amqp.connect({
-            hostname: Config.amqp.host,
-            password: Config.amqp.password,
-            port: Config.amqp.port,
-            protocol: Config.amqp.protocol,
-            username: Config.amqp.username,
-        });
+        if (!this.connection) {
+            this.connection = await amqp.connect({
+                hostname: Config.amqp.host,
+                password: Config.amqp.password,
+                port: Config.amqp.port,
+                protocol: Config.amqp.protocol,
+                username: Config.amqp.username,
+            });
+        }
 
-        this.channel = await this.connection.createChannel();
+        if (!this.channel) {
+            this.channel = await this.connection.createChannel();
 
-        for (const queueName of this.options.queueNames) {
-            this.channel.assertQueue(queueName, { durable: false });
-            this.channel.prefetch(1);
+            for (const queueName of this.options.queueNames) {
+                this.channel.assertQueue(queueName, { durable: false });
+                this.channel.prefetch(1);
 
-            this.channel.consume(queueName, this.processMessage.bind(this));
-            Logger.log(`listening to rpc queue ${queueName} ...`);
+                this.channel.consume(queueName, this.processMessage.bind(this));
+                Logger.log(`listening to rpc queue ${queueName} ...`);
+            }
         }
 
         return true;
     }
 
     public async stop(): Promise<boolean> {
-        await this.channel.close();
-        return true;
+        if (this.channel) {
+            await this.channel.close();
+            return true;
+        }
+
+        return false;
     }
 
     public addRoutes(routeObjects: IRouteOptions | IRouteOptions[]): void {
@@ -55,6 +63,11 @@ export class AmqpServer implements IServer {
     private async processMessage(message: amqp.Message | null): Promise<void> {
         if (!message) {
             return;
+        }
+
+        await this.start();
+        if (!this.channel) {
+            throw new Error('unable to connect to AMQP channel');
         }
 
         try {

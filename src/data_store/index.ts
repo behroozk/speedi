@@ -17,6 +17,7 @@ export class DataStore {
             this.client = new RedisClient();
         } else {
             Logger.error('Unknown data store client');
+            throw new Error('unknown data store client');
         }
     }
 

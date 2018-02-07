@@ -13,7 +13,7 @@ import { IServer } from './index.interface';
 
 export class ExpressServer implements IServer {
     private app: express.Express;
-    private server: http.Server;
+    private server: http.Server | undefined;
 
     constructor(private options: IHttpServerOptions) {
         if (!this.options.protocol) {
@@ -48,6 +48,10 @@ export class ExpressServer implements IServer {
 
     public stop(): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            if (!this.server) {
+                return resolve(false);
+            }
+
             this.server.close(() => {
                 Logger.log(`stopped server at ${this.options.host}:${this.options.port}`);
                 resolve(true);
