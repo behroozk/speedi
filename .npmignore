@@ -1,8 +1,11 @@
 src/
 .vscode/
 index.ts
-dist/test
+test/
+dist/test/
 
 tsconfig.json
 tsconfig_npm.json
 tslint.json
+
+.env
