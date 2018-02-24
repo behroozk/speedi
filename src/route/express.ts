@@ -59,10 +59,12 @@ export class RouteExpress {
         };
     }
 
-    private static payloadSetup(payloadGenerator: (request: express.Request) => any): express.RequestHandler {
+    private static payloadSetup(
+        payloadGenerator: (request: express.Request, response: express.Response) => any,
+    ): express.RequestHandler {
         return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
             try {
-                res.locals.payload = payloadGenerator(req);
+                res.locals.payload = payloadGenerator(req, res);
 
                 return next();
             } catch (error) {
@@ -193,8 +195,15 @@ export class RouteExpress {
             next: express.NextFunction,
         ): Promise<void> => {
             try {
+                const controllerOutput: any = await routeObject.controller.call(null, res.locals.payload);
+
+                // if controller already sent the response
+                if (res.headersSent) {
+                    return;
+                }
+
                 return res
-                    .json(await routeObject.controller.call(null, res.locals.payload))
+                    .json(controllerOutput)
                     .end();
             } catch (error) {
                 const { status, message, metadata } = RouteExpress.extractErrorData(error);

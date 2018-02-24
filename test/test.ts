@@ -24,14 +24,16 @@ async function start(): Promise < void> {
             method: Speedi.RouteMethod.Post,
             name: 'sendFile',
             path: '/send/:toId',
-            payload: (req) => ({
+            payload: (req, res) => ({
                 files: req.files,
                 headers: req.headers,
+                res,
                 toId: req.params.toId,
             }),
             validate: {
                 files: Joi.array().required(),
                 headers: Joi.object().required(),
+                res: Joi.object().required(),
                 toId: Joi.string().required(),
             },
         },
@@ -43,8 +45,9 @@ async function start(): Promise < void> {
 start();
 
 async function sendFile(
-    { files, headers, toId }:
-    {files: any[], headers: string, toId: string },
+    { files, headers, res, toId }:
+    {files: any[], headers: string, res: any, toId: string },
 ): Promise<any> {
+    res.send('test').end();
     return { v: files[0].buffer.toString(), headers, toId };
 }
