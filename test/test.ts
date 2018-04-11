@@ -5,7 +5,7 @@ import * as Speedi from '../index';
 import { speediConfig } from './config/speedi';
 
 async function start(): Promise < void> {
-    await Speedi.Config.init(speediConfig);
+    await Speedi.Config.initialize(speediConfig);
 
     const app = new Speedi.App({
         http: {

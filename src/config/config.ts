@@ -11,7 +11,7 @@ export class Config {
     public static dataStore: IConfigDataStore;
     public static redis: IConfigRedis;
 
-    public static async init(config: Partial<IConfig>): Promise<void> {
+    public static async initialize(config: Partial<IConfig>): Promise<void> {
         const result = Joi.validate(config, this.schema);
 
         if (result.error) {
