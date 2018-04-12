@@ -6,10 +6,10 @@ import { IRateLimitterOutput } from './output.interface';
 
 export class RateLimiter {
     public static async setup({
-        duration = 15 * 60,
-        allowedBeforeDelay = 50,
-        maximumDelay = 60 * 1000,
-        allowedBeforeLimit = 100,
+        waitTime = 15 * 60,
+        requestsAllowedBeforeDelay = 50,
+        maximumResponseDelay = 60 * 1000,
+        requestsAllowedBeforeLimit = 100,
         message = 'Too many requests, please try again later',
         key,
     }: IRateLimiterOptions): Promise<IRateLimitterOutput | null> {
@@ -19,26 +19,27 @@ export class RateLimiter {
 
         try {
             const requests = await RateLimiter.dataStore.unshift(key, Date.now().toString());
-            if (requests > allowedBeforeLimit) {
+            if (requests > requestsAllowedBeforeLimit) {
                 throw { limitExceeded: true };
             }
 
-            // exponentially increasing wait time from 0 to maximumDelay
+            // exponentially increasing response delay time from 0 to maximumDelay
             // after reaching allowedBeforeDelay requests in duration seconds
-            const overDelayLimit = Math.max(0, requests - allowedBeforeDelay);
-            const waitTime = Math.round((maximumDelay / Math.pow(allowedBeforeLimit - allowedBeforeDelay, 2))
+            const overDelayLimit = Math.max(0, requests - requestsAllowedBeforeDelay);
+            const responseDelayTime =
+                Math.round((maximumResponseDelay / Math.pow(requestsAllowedBeforeLimit - requestsAllowedBeforeDelay, 2))
                 * Math.pow(overDelayLimit, 2));
 
-            RateLimiter.dataStore.expire(key, duration);
+            RateLimiter.dataStore.expire(key, waitTime);
             return await new Promise((resolve: (value: IRateLimitterOutput) => void, reject) => {
                 setTimeout(() => {
                     return resolve({
-                        allowedBeforeLimit,
-                        duration,
                         requests,
+                        requestsAllowedBeforeLimit,
+                        responseDelayTime,
                         waitTime,
                     });
-                }, waitTime);
+                }, responseDelayTime);
             });
 
         } catch (error) {

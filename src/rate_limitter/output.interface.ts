@@ -1,6 +1,6 @@
 export interface IRateLimitterOutput {
-    allowedBeforeLimit: number;
-    duration: number;
-    requests: number;
+    requestsAllowedBeforeLimit: number;
     waitTime: number;
+    requests: number;
+    responseDelayTime: number;
 }

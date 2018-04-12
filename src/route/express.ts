@@ -98,15 +98,15 @@ export class RouteExpress {
                 const result = await RateLimiter.setup(options);
 
                 if (result &&
-                    !isNaN(result.allowedBeforeLimit) &&
-                    !isNaN(result.duration) &&
+                    !isNaN(result.requestsAllowedBeforeLimit) &&
+                    !isNaN(result.waitTime) &&
                     !isNaN(result.requests) &&
-                    !isNaN(result.waitTime)
+                    !isNaN(result.responseDelayTime)
                 ) {
-                    res.set('X-Rate-Limit-Limit', (result.allowedBeforeLimit).toString());
-                    res.set('X-Rate-Limit-Remaining', (result.allowedBeforeLimit - result.requests).toString());
-                    res.set('X-Rate-Limit-Reset', result.duration.toString());
-                    res.set('X-Rate-Limit-Wait', Math.round(result.waitTime / 1000).toString());
+                    res.set('X-Rate-Limit-Limit', (result.requestsAllowedBeforeLimit).toString());
+                    res.set('X-Rate-Limit-Remaining', (result.requestsAllowedBeforeLimit - result.requests).toString());
+                    res.set('X-Rate-Limit-Reset', result.waitTime.toString());
+                    res.set('X-Rate-Limit-Wait', Math.round(result.responseDelayTime / 1000).toString());
                 }
 
                 return next();

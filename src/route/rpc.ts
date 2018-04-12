@@ -69,16 +69,16 @@ export class RpcRoute {
             const result = await RateLimiter.setup(options);
 
             if (result &&
-                !isNaN(result.allowedBeforeLimit) &&
-                !isNaN(result.duration) &&
+                !isNaN(result.requestsAllowedBeforeLimit) &&
+                !isNaN(result.waitTime) &&
                 !isNaN(result.requests) &&
-                !isNaN(result.waitTime)
+                !isNaN(result.responseDelayTime)
             ) {
-                req.response.headers['X-Rate-Limit-Limit'] = (result.allowedBeforeLimit).toString();
+                req.response.headers['X-Rate-Limit-Limit'] = (result.requestsAllowedBeforeLimit).toString();
                 req.response.headers['X-Rate-Limit-Remaining'] =
-                    (result.allowedBeforeLimit - result.requests).toString();
-                req.response.headers['X-Rate-Limit-Reset'] = result.duration.toString();
-                req.response.headers['X-Rate-Limit-Wait'] = Math.round(result.waitTime / 1000).toString();
+                    (result.requestsAllowedBeforeLimit - result.requests).toString();
+                req.response.headers['X-Rate-Limit-Reset'] = result.waitTime.toString();
+                req.response.headers['X-Rate-Limit-Wait'] = Math.round(result.responseDelayTime / 1000).toString();
             }
 
             return req;
