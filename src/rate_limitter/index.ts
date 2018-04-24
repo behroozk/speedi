@@ -13,6 +13,10 @@ export class RateLimiter {
         message = 'Too many requests, please try again later',
         key,
     }: IRateLimiterOptions): Promise<IRateLimitterOutput | null> {
+        if (!key) {
+            return null;
+        }
+
         if (!RateLimiter.dataStore) {
             RateLimiter.dataStore = new DataStore('ratelimit');
         }
@@ -31,7 +35,7 @@ export class RateLimiter {
                 * Math.pow(overDelayLimit, 2));
 
             RateLimiter.dataStore.expire(key, waitTime);
-            return await new Promise((resolve: (value: IRateLimitterOutput) => void, reject) => {
+            return await new Promise((resolve: (value: IRateLimitterOutput) => void) => {
                 setTimeout(() => {
                     return resolve({
                         requests,

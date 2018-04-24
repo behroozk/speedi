@@ -9,5 +9,5 @@ export interface IRateLimiterOptions {
     requestsAllowedBeforeLimit: number;
     message?: string;
     keyGenerator?: (req: express.Request | IRpcRequest) => string;
-    key: string;
+    key?: string;
 }
