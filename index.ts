@@ -10,7 +10,7 @@ import { IConfig } from './src/config/index.interface';
 import { RequestError } from './src/error/request';
 import { ErrorType } from './src/error/type.enum';
 import { IPayloadFile } from './src/payload/file.interface';
-import { IRateLimiterOptions } from './src/rate_limitter/options.interface';
+import { IRateLimiterOptions } from './src/rate_limiter/options.interface';
 import { RouteMethod } from './src/route/method.enum';
 import { IRouteOptions } from './src/route/options.interface';
 import { RpcSender } from './src/rpc/sender';

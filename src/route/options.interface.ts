@@ -3,7 +3,7 @@ import * as Joi from 'joi';
 
 import { IAuthenticationOptions } from '../authentication/options.interface';
 import { ICacherOptions } from '../cacher/options.interface';
-import { IRateLimiterOptions } from '../rate_limitter/options.interface';
+import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
 
 export interface IRouteOptions {
