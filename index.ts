@@ -9,6 +9,7 @@ import { Config } from './src/config/config';
 import { IConfig } from './src/config/index.interface';
 import { RequestError } from './src/error/request';
 import { ErrorType } from './src/error/type.enum';
+import { FixedResponse } from './src/fixed_response';
 import { IPayloadFile } from './src/payload/file.interface';
 import { IRateLimiterOptions } from './src/rate_limiter/options.interface';
 import { RouteMethod } from './src/route/method.enum';
@@ -27,6 +28,7 @@ export {
     IPayloadFile,
     RequestError,
     ErrorType,
+    FixedResponse,
     RouteMethod,
     RpcSender,
 };
