@@ -36,7 +36,7 @@ export class RpcRoute {
 
     private static authentication(options: IAuthenticationOptions): RpcMiddleware {
         return async (req: IRpcRequest): Promise<IRpcRequest> => {
-            req.authentication = Authentication.verify(
+            req.authentication = await Authentication.verify(
                 (req.authenticationToken || '').split(' ')[1],
                 options,
             );

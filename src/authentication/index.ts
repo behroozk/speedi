@@ -10,11 +10,7 @@ import { IAuthenticationToken } from './token.interface';
 export class Authentication {
     public static decode(encodedToken: string): Authentication | null {
         try {
-            const verifiedToken = jwt.verify(encodedToken, Config.authentication.secretKey) as IAuthenticationToken;
-
-            if (!verifiedToken.issuedAt || !verifiedToken.lastAccess) {
-                throw new Error('invalid token');
-            }
+            const verifiedToken = jwt.verify(encodedToken, Config.authentication.secretKey);
 
             return new Authentication(verifiedToken);
         } catch (error) {
@@ -23,50 +19,24 @@ export class Authentication {
         }
     }
 
-    public static verify(encodedToken: string, options: IAuthenticationOptions): Authentication {
-        const authentication = Authentication.decode(encodedToken);
+    public static async verify(encodedToken: string, options: IAuthenticationOptions): Promise<Authentication> {
+        const authentication: Authentication | null = Authentication.decode(encodedToken);
 
         if (!authentication) {
             throw new RequestError(ErrorType.Unauthorized);
-        } else if (!authentication.rolesExist(options.roles)) {
-            throw new RequestError(ErrorType.Forbidden);
-        } else if (!authentication.isTokenTimeValid()) {
-            throw new RequestError(ErrorType.Unauthorized, 'reauthentication required');
-        } else if (options.customAuthenticator && !options.customAuthenticator(authentication.token)) {
-            throw new RequestError(ErrorType.Unauthorized, 'custom authentication failed');
         }
 
-        if (options.renewToken) {
-            authentication.renewLastAccess();
+        const isAuthenticated: boolean = await options.authenticator(authentication.token);
+        if (!isAuthenticated) {
+            throw new RequestError(ErrorType.Unauthorized, 'authentication failed');
         }
 
         return authentication;
     }
 
-    constructor(public token: IAuthenticationToken) { }
+    constructor(public token: any) { }
 
     public sign(): string {
         return jwt.sign(this.token, Config.authentication.secretKey);
-    }
-
-    public renewLastAccess(): Authentication {
-        this.token.lastAccess = Date.now();
-        return this;
-    }
-
-    public rolesExist(roles: string[]): boolean {
-        if (!this.token.roles) {
-            return false;
-        }
-
-        for (const role of roles) {
-            if (this.token.roles.indexOf(role) < 0) { return false; }
-        }
-
-        return true;
-    }
-
-    public isTokenTimeValid(): boolean {
-        return this.token.lastAccess + Config.authentication.tokenLifeTime > Date.now();
     }
 }

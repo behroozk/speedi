@@ -43,9 +43,9 @@ export class RouteExpress {
     }
 
     private static authentication(options: IAuthenticationOptions): express.RequestHandler {
-        return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+        return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
             try {
-                res.locals.authenticationToken = Authentication.verify(
+                res.locals.authenticationToken = await Authentication.verify(
                     (req.get('Authorization') || '').split(' ')[1],
                     options,
                 );
