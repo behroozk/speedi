@@ -8,6 +8,7 @@ import { Cacher } from '../cacher/index';
 import { ICacherOptions } from '../cacher/options.interface';
 import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
+import { FixedResponse } from '../fixed_response';
 import { Payload } from '../payload/index';
 import { RateLimiter } from '../rate_limiter/index';
 import { IRateLimiterOptions } from '../rate_limiter/options.interface';
@@ -196,6 +197,10 @@ export class RouteExpress {
         ): Promise<void> => {
             try {
                 const controllerOutput: any = await routeObject.controller.call(null, res.locals.payload);
+
+                if (controllerOutput instanceof FixedResponse) {
+                    controllerOutput.express(res);
+                }
 
                 // if controller already sent the response
                 if (res.headersSent) {

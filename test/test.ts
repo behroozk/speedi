@@ -4,7 +4,7 @@ import * as Joi from 'joi';
 import * as Speedi from '../index';
 import { speediConfig } from './config/speedi';
 
-async function start(): Promise < void> {
+async function start(): Promise<void> {
     await Speedi.Config.initialize(speediConfig);
 
     const app = new Speedi.App({
@@ -19,7 +19,7 @@ async function start(): Promise < void> {
     app.addRoutes([
         {
             authentication: {
-                authenticator: async (token: {test: number}) => {
+                authenticator: async (token: { test: number }) => {
                     if (token.test) {
                         token.test = 1;
                     }
@@ -45,6 +45,21 @@ async function start(): Promise < void> {
                 toId: Joi.string().required(),
             },
         },
+        {
+            controller: async ({ email }: { email: string }) => {
+                return Speedi.FixedResponse.redirect(`http://www.supplyhub.com`, 300);
+            },
+            description: 'test route #2',
+            method: Speedi.RouteMethod.Post,
+            name: 'test2',
+            path: '/test2',
+            payload: (req) => ({
+                email: req.body.email,
+            }),
+            validate: {
+                email: Joi.string().email().required(),
+            },
+        },
     ]);
 
     app.run();
@@ -54,7 +69,7 @@ start();
 
 async function sendFile(
     { files, headers, res, toId }:
-    {files: any[], headers: string, res: any, toId: string },
+        { files: any[], headers: string, res: any, toId: string },
 ): Promise<any> {
     res.send('test').end();
     return { v: files[0].buffer.toString(), headers, toId };

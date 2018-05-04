@@ -7,6 +7,7 @@ import { Cacher } from '../cacher/index';
 import { ICacherOptions } from '../cacher/options.interface';
 import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
+import { FixedResponse } from '../fixed_response';
 import { Payload } from '../payload/index';
 import { RateLimiter } from '../rate_limiter/index';
 import { IRateLimiterOptions } from '../rate_limiter/options.interface';
@@ -154,6 +155,10 @@ export class RpcRoute {
             result = await middleware(requestData);
 
             if (result.response.body) {
+                if (result.response.body instanceof FixedResponse) {
+                    result.response.body.rpc(result.response);
+                }
+
                 if (result.cacheResponseOptions) {
                     const cache: ICachedValue = {
                         body: result.response.body,
