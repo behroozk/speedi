@@ -27,6 +27,22 @@ export class ExpressServer implements IServer {
         this.app.use(bodyParser.urlencoded({ extended: false }));
         this.app.use(bodyParser.json());
         this.app.use(compression());
+        // Adding CORS headers
+        this.app.use(function (req, res, next) {
+          let allowedOrigins = [
+              'https://dashboard.supplyhub.com',
+              'https://dev-dashboard.supplyhub.com',
+              'http://localhost:4200'
+          ];
+          let origin = req.headers.origin;
+          if (allowedOrigins.indexOf(origin) > -1) {
+              res.setHeader('Access-Control-Allow-Origin', origin);
+          }
+          res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+          res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+          res.header('Access-Control-Allow-Credentials', true);
+          return next();
+        });
     }
 
     public start(): Promise<boolean> {
