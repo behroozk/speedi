@@ -9,6 +9,7 @@ async function start(): Promise<void> {
 
     const app = new Speedi.App({
         http: {
+            allowedOrigins: [/\.supplyhub\.com$/],
             host: 'localhost',
             port: 3002,
             protocol: 'http',
