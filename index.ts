@@ -3,7 +3,6 @@ import * as Joi from 'joi';
 
 import { App } from './src/app/';
 import { IAuthenticationOptions } from './src/authentication/options.interface';
-import { IAuthenticationToken } from './src/authentication/token.interface';
 import { ICacherOptions } from './src/cacher/options.interface';
 import { Config } from './src/config/config';
 import { IConfig } from './src/config/index.interface';
@@ -20,7 +19,6 @@ export {
     App,
     Config,
     IAuthenticationOptions,
-    IAuthenticationToken,
     ICacherOptions,
     IConfig,
     IRateLimiterOptions,
