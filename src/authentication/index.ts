@@ -19,10 +19,14 @@ export class Authentication {
     }
 
     public static async verify(
-        encodedToken: string,
+        encodedToken: string | undefined,
         payload: any,
         options: IAuthenticationOptions,
     ): Promise<Authentication> {
+        if (!encodedToken) {
+            throw new RequestError(ErrorType.Unauthorized);
+        }
+
         const authentication: Authentication | null = Authentication.decode(encodedToken);
 
         if (!authentication) {
@@ -40,8 +44,4 @@ export class Authentication {
     }
 
     constructor(public token: any) { }
-
-    public sign(): string {
-        return jwt.sign(this.token, Config.authentication.secretKey);
-    }
 }
