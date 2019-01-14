@@ -1,3 +1,3 @@
 export interface IAuthenticationOptions {
-    authenticator: (token: any) => Promise<boolean>;
+    authenticators: Array<(token: any) => Promise<boolean>>;
 }

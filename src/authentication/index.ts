@@ -25,8 +25,10 @@ export class Authentication {
             throw new RequestError(ErrorType.Unauthorized);
         }
 
-        const isAuthenticated: boolean = await options.authenticator(authentication.token);
-        if (!isAuthenticated) {
+        const promises = options.authenticators.map((authenticator) => authenticator(authentication.token));
+
+        const isAuthenticated = await Promise.all(promises);
+        if (!isAuthenticated.every((auth) => auth)) {
             throw new RequestError(ErrorType.Unauthorized, 'authentication failed');
         }
 

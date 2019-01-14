@@ -20,12 +20,12 @@ async function start(): Promise<void> {
     app.addRoutes([
         {
             authentication: {
-                authenticator: async (token: { test: number }) => {
+                authenticators: [async (token: { test: number }) => {
                     if (token.test) {
                         token.test = 1;
                     }
                     return true;
-                },
+                }],
             },
             controller: sendFile,
             description: 'Send EDI documents through AS2',
