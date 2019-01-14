@@ -20,9 +20,10 @@ async function start(): Promise<void> {
     app.addRoutes([
         {
             authentication: {
-                authenticators: [async (token: { test: number }) => {
+                authenticators: [async (token: { test: number }, payload: any) => {
                     if (token.test) {
                         token.test = 1;
+                        payload.blah = 2;
                     }
                     return true;
                 }],

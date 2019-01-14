@@ -22,23 +22,11 @@ export class RpcRoute {
         return rpcHandler;
     }
 
-    private static extractErrorData(error: Error): { status: number, message: string, metadata: any } {
-        let status: number = 500;
-        const message = error.message;
-        let metadata: any = {};
-
-        if (error instanceof RequestError) {
-            status = error.code;
-            metadata = error.metadata;
-        }
-
-        return { status, message, metadata };
-    }
-
     private static authentication(options: IAuthenticationOptions): RpcMiddleware {
         return async (req: IRpcRequest): Promise<IRpcRequest> => {
             req.authentication = await Authentication.verify(
                 (req.authenticationToken || '').split(' ')[1],
+                req.payload,
                 options,
             );
 

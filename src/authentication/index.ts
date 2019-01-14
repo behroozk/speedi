@@ -18,14 +18,18 @@ export class Authentication {
         }
     }
 
-    public static async verify(encodedToken: string, options: IAuthenticationOptions): Promise<Authentication> {
+    public static async verify(
+        encodedToken: string,
+        payload: any,
+        options: IAuthenticationOptions,
+    ): Promise<Authentication> {
         const authentication: Authentication | null = Authentication.decode(encodedToken);
 
         if (!authentication) {
             throw new RequestError(ErrorType.Unauthorized);
         }
 
-        const promises = options.authenticators.map((authenticator) => authenticator(authentication.token));
+        const promises = options.authenticators.map((authenticator) => authenticator(authentication.token, payload));
 
         const isAuthenticated = await Promise.all(promises);
         if (!isAuthenticated.every((auth) => auth)) {

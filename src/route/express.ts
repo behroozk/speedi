@@ -48,6 +48,7 @@ export class RouteExpress {
             try {
                 res.locals.authenticationToken = await Authentication.verify(
                     (req.get('Authorization') || '').split(' ')[1],
+                    res.locals.payload,
                     options,
                 );
 
@@ -166,10 +167,6 @@ export class RouteExpress {
     private static setupRoute(router: express.Router, routeObject: IRouteOptions): express.Router {
         const middlewares: express.RequestHandler[] = [];
 
-        if (routeObject.authentication) {
-            middlewares.push(this.authentication(routeObject.authentication));
-        }
-
         if (routeObject.files) {
             middlewares.push(Multer().any());
         }
@@ -180,6 +177,10 @@ export class RouteExpress {
 
         if (routeObject.validate) {
             middlewares.push(this.payloadValidate(routeObject.validate));
+        }
+
+        if (routeObject.authentication) {
+            middlewares.push(this.authentication(routeObject.authentication));
         }
 
         if (routeObject.rateLimit) {
