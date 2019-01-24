@@ -15,6 +15,7 @@ export interface IRouteOptions {
     authentication?: IAuthenticationOptions;
     files?: boolean;
     payload?: (request: express.Request, response?: express.Response) => any;
+    schema?: any;
     validate?: Joi.SchemaMap;
     rateLimit?: IRateLimiterOptions;
     cache?: ICacherOptions;

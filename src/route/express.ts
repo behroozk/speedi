@@ -9,7 +9,7 @@ import { ICacherOptions } from '../cacher/options.interface';
 import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
 import { FixedResponse } from '../fixed_response';
-import { Payload } from '../payload/index';
+import { Payload, validateJsonSchema } from '../payload/index';
 import { RateLimiter } from '../rate_limiter/index';
 import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
@@ -77,7 +77,21 @@ export class RouteExpress {
         };
     }
 
-    private static payloadValidate(schema: Joi.SchemaMap): express.RequestHandler {
+    private static payloadJsonSchemaValidate(schema: any): express.Handler {
+        return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+            try {
+                res.locals.payload = validateJsonSchema(res.locals.payload, schema);
+
+                return next();
+            } catch (error) {
+                const { status, message, metadata } = RouteExpress.extractErrorData(error);
+
+                return res.status(status).send({ message, metadata }).end();
+            }
+        };
+    }
+
+    private static payloadJoiValidate(schema: Joi.SchemaMap): express.RequestHandler {
         return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
             try {
                 res.locals.payload = Payload.validate(res.locals.payload, schema);
@@ -175,8 +189,10 @@ export class RouteExpress {
             middlewares.push(this.payloadSetup(routeObject.payload));
         }
 
-        if (routeObject.validate) {
-            middlewares.push(this.payloadValidate(routeObject.validate));
+        if (routeObject.schema) {
+            middlewares.push(this.payloadJsonSchemaValidate(routeObject.schema));
+        } else if (routeObject.validate) {
+            middlewares.push(this.payloadJoiValidate(routeObject.validate));
         }
 
         if (routeObject.authentication) {
