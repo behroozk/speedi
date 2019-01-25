@@ -7,7 +7,7 @@ import * as helmet from 'helmet';
 import * as http from 'http';
 import * as morgan from 'morgan';
 
-import { RouteExpress } from '../route/express';
+import * as RouteExpress from '../route/express';
 import { IRouteOptions } from '../route/options.interface';
 import { IHttpServerOptions } from './http_options.interface';
 import { IServer } from './index.interface';

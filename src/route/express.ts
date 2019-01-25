@@ -1,259 +1,272 @@
 import * as express from 'express';
+import * as http from 'http';
 import * as Joi from 'joi';
 import * as Multer from 'multer';
 
-import { Authentication } from '../authentication/index';
+import * as Authentication from '../authentication/index';
 import { IAuthenticationOptions } from '../authentication/options.interface';
-import { Cacher } from '../cacher/index';
+import * as Cache from '../cacher/index';
 import { ICacherOptions } from '../cacher/options.interface';
 import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
 import { FixedResponse } from '../fixed_response';
-import { Payload, validateJsonSchema } from '../payload/index';
-import { RateLimiter } from '../rate_limiter/index';
+import { validateJoi, validateJsonSchema } from '../payload/index';
+import { rateLimit } from '../rate_limiter/index';
 import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
 import { IRouteOptions } from './options.interface';
 
-export class RouteExpress {
-    public static generate(routeObjects: IRouteOptions | IRouteOptions[]): express.Router {
-        const router = express.Router();
+export function generate(routeObjects: IRouteOptions | IRouteOptions[]): express.Router {
+    const router = express.Router();
 
-        if (!Array.isArray(routeObjects)) {
-            return this.setupRoute(router, routeObjects);
-        } else {
-            for (const routeObject of routeObjects) {
-                this.setupRoute(router, routeObject);
+    if (!Array.isArray(routeObjects)) {
+        return setupRoute(router, routeObjects);
+    } else {
+        for (const routeObject of routeObjects) {
+            setupRoute(router, routeObject);
+        }
+    }
+
+    return router;
+}
+
+function setupRoute(router: express.Router, routeObject: IRouteOptions): express.Router {
+    const middlewares: express.RequestHandler[] = [];
+
+    if (routeObject.files) {
+        middlewares.push(Multer().any());
+    }
+
+    if (routeObject.payload) {
+        middlewares.push(payloadSetup(routeObject.payload));
+    }
+
+    if (routeObject.schema) {
+        middlewares.push(payloadValidatorJsonSchema(routeObject.schema));
+    } else if (routeObject.validate) {
+        middlewares.push(payloadValidatorJoi(routeObject.validate));
+    }
+
+    if (routeObject.authentication) {
+        middlewares.push(authenticator(routeObject.authentication));
+    }
+
+    if (routeObject.rateLimit) {
+        middlewares.push(rateLimiter(routeObject.rateLimit));
+    }
+
+    if (routeObject.cache) {
+        middlewares.push(cacher(routeObject.cache));
+    }
+
+    middlewares.push(async (
+        req: express.Request,
+        res: express.Response,
+        next: express.NextFunction,
+    ): Promise<void> => {
+        try {
+            const controllerOutput: any = await routeObject.controller.call(null, res.locals.payload);
+
+            if (controllerOutput instanceof FixedResponse) {
+                controllerOutput.express(res);
             }
-        }
 
-        return router;
+            // if controller already sent the response
+            if (res.headersSent) {
+                return;
+            }
+
+            return res
+                .json(controllerOutput)
+                .end();
+        } catch (error) {
+            const { status, message, metadata } = extractErrorData(error);
+
+            return res.status(status).send({ message, metadata }).end();
+        }
+    });
+
+    switch (routeObject.method) {
+        case RouteMethod.Get:
+            router.get(routeObject.path, middlewares);
+            break;
+        case RouteMethod.Post:
+            router.post(routeObject.path, middlewares);
+            break;
+        case RouteMethod.Put:
+            router.put(routeObject.path, middlewares);
+            break;
+        case RouteMethod.Patch:
+            router.patch(routeObject.path, middlewares);
+            break;
+        case RouteMethod.Delete:
+            router.delete(routeObject.path, middlewares);
+            break;
+        default:
+            throw new Error(`undefined route method: ${routeObject.method}`);
     }
 
-    private static extractErrorData(error: Error): { status: number, message: string, metadata: any } {
-        let status: number = 500;
-        const message = error.message;
-        let metadata: any = {};
+    return router;
+}
 
-        if (error instanceof RequestError) {
-            status = error.code;
-            metadata = error.metadata;
-        }
+function extractErrorData(error: Error): { status: number, message: string, metadata: any } {
+    let status: number = 500;
+    const message = error.message;
+    let metadata: any = {};
 
-        return { status, message, metadata };
+    if (error instanceof RequestError) {
+        status = error.code;
+        metadata = error.metadata;
     }
 
-    private static authentication(options: IAuthenticationOptions): express.RequestHandler {
-        return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-            try {
-                res.locals.authenticationToken = await Authentication.verify(
-                    (req.get('Authorization') || '').split(' ')[1],
-                    res.locals.payload,
-                    options,
-                );
+    return { status, message, metadata };
+}
 
+function authenticator(options: IAuthenticationOptions): express.RequestHandler {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+        try {
+            res.locals.authenticationToken = await Authentication.verify(
+                (req.get('Authorization') || '').split(' ')[1],
+                res.locals.payload,
+                options,
+            );
+
+            return next();
+        } catch (error) {
+            const { status, message, metadata } = extractErrorData(error);
+
+            return res.status(status).send({ message, metadata }).end();
+        }
+    };
+}
+
+function payloadSetup(
+    payloadGenerator: (request: express.Request, response: express.Response) => any,
+): express.RequestHandler {
+    return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+        try {
+            res.locals.payload = payloadGenerator(req, res);
+
+            return next();
+        } catch (error) {
+            const { status, message, metadata } = extractErrorData(error);
+
+            return res.status(status).send({ message, metadata }).end();
+        }
+    };
+}
+
+function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
+    return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+        try {
+            res.locals.payload = validateJsonSchema(res.locals.payload, schema);
+
+            return next();
+        } catch (error) {
+            const { status, message, metadata } = extractErrorData(error);
+
+            return res.status(status).send({ message, metadata }).end();
+        }
+    };
+}
+
+function payloadValidatorJoi(schema: Joi.SchemaMap): express.RequestHandler {
+    return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+        try {
+            res.locals.payload = validateJoi(res.locals.payload, schema);
+
+            return next();
+        } catch (error) {
+            const { status, message, metadata } = extractErrorData(error);
+
+            return res.status(status).send({ message, metadata }).end();
+        }
+    };
+}
+
+function rateLimiter(options: IRateLimiterOptions): express.RequestHandler {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+        try {
+            options.key = options.keyGenerator ?
+                options.keyGenerator(req) : `ratelimit_${req.ip}_${req.method}_${req.originalUrl}`;
+
+            const result = await rateLimit(options);
+
+            if (result &&
+                !isNaN(result.requestsAllowedBeforeLimit) &&
+                !isNaN(result.waitTime) &&
+                !isNaN(result.requests) &&
+                !isNaN(result.responseDelayTime)
+            ) {
+                res.set('X-Rate-Limit-Limit', (result.requestsAllowedBeforeLimit).toString());
+                res.set('X-Rate-Limit-Remaining', (result.requestsAllowedBeforeLimit - result.requests).toString());
+                res.set('X-Rate-Limit-Reset', result.waitTime.toString());
+                res.set('X-Rate-Limit-Wait', Math.round(result.responseDelayTime / 1000).toString());
+            }
+
+            return next();
+        } catch (error) {
+            const { status, message, metadata } = extractErrorData(error);
+
+            return res.status(status).send({ message, metadata }).end();
+        }
+    };
+}
+
+function cacher(options: ICacherOptions): express.RequestHandler {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+        try {
+            const key: string = getCacheKey(options, req, res);
+
+            const cachedResponse = await Cache.retrieve(key);
+            if (!cachedResponse) {
+                storeResponse(res);
+                res.on('finish', () => {
+                    if (res.statusCode === 200 && res.locals.body) {
+                        const cache: ICachedValue = {
+                            body: res.locals.body,
+                            header: res.get('Content-Type'),
+                        };
+
+                        Cache.store(key, cache, options.expire);
+                    }
+                });
                 return next();
-            } catch (error) {
-                const { status, message, metadata } = RouteExpress.extractErrorData(error);
-
-                return res.status(status).send({ message, metadata }).end();
+            } else {
+                return res.set('Content-Type', cachedResponse.header).send(cachedResponse.body).end();
             }
-        };
-    }
+        } catch (error) {
+            const { status, message, metadata } = extractErrorData(error);
 
-    private static payloadSetup(
-        payloadGenerator: (request: express.Request, response: express.Response) => any,
-    ): express.RequestHandler {
-        return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
-            try {
-                res.locals.payload = payloadGenerator(req, res);
+            return res.status(status).send({ message, metadata }).end();
+        }
+    };
+}
 
-                return next();
-            } catch (error) {
-                const { status, message, metadata } = RouteExpress.extractErrorData(error);
+function storeResponse(res: express.Response): void {
+    const originalSend = res.send.bind(res);
 
-                return res.status(status).send({ message, metadata }).end();
-            }
-        };
-    }
+    res.send = function send(body: any) {
+        res.locals.body = body;
+        return originalSend(body);
+    };
+}
 
-    private static payloadJsonSchemaValidate(schema: any): express.Handler {
-        return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
-            try {
-                res.locals.payload = validateJsonSchema(res.locals.payload, schema);
+function getCacheKey(options: ICacherOptions, req: express.Request, res: express.Response): string {
+    if (!options.keyGenerator) {
+        const keyParts: string[] = [
+            req.ip,
+            req.method,
+            req.originalUrl,
+        ];
 
-                return next();
-            } catch (error) {
-                const { status, message, metadata } = RouteExpress.extractErrorData(error);
-
-                return res.status(status).send({ message, metadata }).end();
-            }
-        };
-    }
-
-    private static payloadJoiValidate(schema: Joi.SchemaMap): express.RequestHandler {
-        return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
-            try {
-                res.locals.payload = Payload.validate(res.locals.payload, schema);
-
-                return next();
-            } catch (error) {
-                const { status, message, metadata } = RouteExpress.extractErrorData(error);
-
-                return res.status(status).send({ message, metadata }).end();
-            }
-        };
-    }
-
-    private static rateLimiter(options: IRateLimiterOptions): express.RequestHandler {
-        return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-            try {
-                options.key = options.keyGenerator ?
-                    options.keyGenerator(req) : `ratelimit_${req.ip}_${req.method}_${req.originalUrl}`;
-
-                const result = await RateLimiter.setup(options);
-
-                if (result &&
-                    !isNaN(result.requestsAllowedBeforeLimit) &&
-                    !isNaN(result.waitTime) &&
-                    !isNaN(result.requests) &&
-                    !isNaN(result.responseDelayTime)
-                ) {
-                    res.set('X-Rate-Limit-Limit', (result.requestsAllowedBeforeLimit).toString());
-                    res.set('X-Rate-Limit-Remaining', (result.requestsAllowedBeforeLimit - result.requests).toString());
-                    res.set('X-Rate-Limit-Reset', result.waitTime.toString());
-                    res.set('X-Rate-Limit-Wait', Math.round(result.responseDelayTime / 1000).toString());
-                }
-
-                return next();
-            } catch (error) {
-                const { status, message, metadata } = RouteExpress.extractErrorData(error);
-
-                return res.status(status).send({ message, metadata }).end();
-            }
-        };
-    }
-
-    private static cacher(options: ICacherOptions): express.RequestHandler {
-        return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-            try {
-                let key = `cache_${req.ip}_${req.method}_${req.originalUrl}`;
-
-                if (options.authBased && res.locals.authentication) {
-                    const authentication: Authentication = res.locals.authentication;
-                    key += '_' + JSON.stringify(authentication.token);
-                }
-
-                const cachedResponse = await Cacher.retrieve(key);
-                if (!cachedResponse) {
-                    RouteExpress.storeResponse(res);
-                    res.on('finish', () => {
-                        if (res.statusCode === 200 && res.locals.body) {
-                            const cache: ICachedValue = {
-                                body: res.locals.body,
-                                header: res.get('Content-Type'),
-                            };
-
-                            Cacher.store(key, cache, options.expire);
-                        }
-                    });
-                    return next();
-                } else {
-                    return res.set('Content-Type', cachedResponse.header).send(cachedResponse.body).end();
-                }
-            } catch (error) {
-                const { status, message, metadata } = RouteExpress.extractErrorData(error);
-
-                return res.status(status).send({ message, metadata }).end();
-            }
-        };
-    }
-
-    private static storeResponse(res: express.Response): void {
-        const originalSend = res.send.bind(res);
-
-        res.send = function send(body: any) {
-            res.locals.body = body;
-            return originalSend(body);
-        };
-    }
-
-    private static setupRoute(router: express.Router, routeObject: IRouteOptions): express.Router {
-        const middlewares: express.RequestHandler[] = [];
-
-        if (routeObject.files) {
-            middlewares.push(Multer().any());
+        if (options.authBased && res.locals.authentication) {
+            const authentication: string | object = res.locals.authentication;
+            keyParts.push(JSON.stringify(authentication));
         }
 
-        if (routeObject.payload) {
-            middlewares.push(this.payloadSetup(routeObject.payload));
-        }
-
-        if (routeObject.schema) {
-            middlewares.push(this.payloadJsonSchemaValidate(routeObject.schema));
-        } else if (routeObject.validate) {
-            middlewares.push(this.payloadJoiValidate(routeObject.validate));
-        }
-
-        if (routeObject.authentication) {
-            middlewares.push(this.authentication(routeObject.authentication));
-        }
-
-        if (routeObject.rateLimit) {
-            middlewares.push(this.rateLimiter(routeObject.rateLimit));
-        }
-
-        if (routeObject.cache) {
-            middlewares.push(this.cacher(routeObject.cache));
-        }
-
-        middlewares.push(async (
-            req: express.Request,
-            res: express.Response,
-            next: express.NextFunction,
-        ): Promise<void> => {
-            try {
-                const controllerOutput: any = await routeObject.controller.call(null, res.locals.payload);
-
-                if (controllerOutput instanceof FixedResponse) {
-                    controllerOutput.express(res);
-                }
-
-                // if controller already sent the response
-                if (res.headersSent) {
-                    return;
-                }
-
-                return res
-                    .json(controllerOutput)
-                    .end();
-            } catch (error) {
-                const { status, message, metadata } = RouteExpress.extractErrorData(error);
-
-                return res.status(status).send({ message, metadata }).end();
-            }
-        });
-
-        switch (routeObject.method) {
-            case RouteMethod.Get:
-                router.get(routeObject.path, middlewares);
-                break;
-            case RouteMethod.Post:
-                router.post(routeObject.path, middlewares);
-                break;
-            case RouteMethod.Put:
-                router.put(routeObject.path, middlewares);
-                break;
-            case RouteMethod.Patch:
-                router.patch(routeObject.path, middlewares);
-                break;
-            case RouteMethod.Delete:
-                router.delete(routeObject.path, middlewares);
-                break;
-            default:
-                throw new Error(`undefined route method: ${routeObject.method}`);
-        }
-
-        return router;
+        return `cache_${keyParts.join('_')}`;
+    } else {
+        return `cache_${options.keyGenerator(req)}`;
     }
 }
