@@ -1,9 +1,6 @@
-import { IRpcOptions } from '../rpc/options.interface';
-
 export interface IConfig {
     app: Partial<IConfigApp>;
     authentication: Partial<IConfigAuthentication>;
-    amqp: Partial<IRpcOptions>;
     dataStore: Partial<IConfigDataStore>;
     redis: Partial<IConfigRedis>;
 }

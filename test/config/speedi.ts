@@ -1,13 +1,6 @@
 import { IConfig } from '../../index';
 
 export const speediConfig: Partial<IConfig> = {
-    amqp: {
-        host: process.env.AMQP_HOST,
-        password: process.env.AMQP_PASSWORD,
-        port: Number(process.env.AMQP_PORT) || undefined,
-        protocol: process.env.AMQP_PROTOCOL,
-        username: process.env.AMQP_USERNAME,
-    },
     app: {
         nodeEnv: process.env.NODE_ENV || 'development',
     },

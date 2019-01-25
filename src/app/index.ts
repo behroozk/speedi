@@ -1,6 +1,5 @@
 import { RouteMethod } from '../../index';
 import { IRouteOptions } from '../route/options.interface';
-import { AmqpServer } from '../server/amqp';
 import { ExpressServer } from '../server/express';
 import { IServer } from '../server/index.interface';
 import { IAppOptions } from './options.interface';
@@ -14,10 +13,6 @@ export class App {
 
         if (options.http) {
             this.servers.push(new ExpressServer(options.http));
-        }
-
-        if (options.rpc) {
-            this.servers.push(new AmqpServer(options.rpc));
         }
     }
 
