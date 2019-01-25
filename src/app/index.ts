@@ -2,31 +2,33 @@ import { RouteMethod } from '../../index';
 import { IRouteOptions } from '../route/options.interface';
 import { ExpressServer } from '../server/express';
 import { IServer } from '../server/index.interface';
+import { ServerType } from '../server/type.enum';
 import { IAppOptions } from './options.interface';
 
 export class App {
     private name: string;
-    private servers: IServer[] = [];
+    private server: IServer;
 
     constructor(private options: IAppOptions) {
         this.name = options.name;
 
-        if (options.http) {
-            this.servers.push(new ExpressServer(options.http));
+        switch (options.serverType) {
+            case ServerType.Express:
+                this.server = new ExpressServer(options.httpOptions);
+                break;
+            default:
+                throw new Error('Unknown server');
         }
     }
 
-    public async run(): Promise<void> {
+    public async run(): Promise<boolean> {
         this.addMonitoringRoutes();
 
-        const promises = this.servers.map((server) => server.start());
-        const result = await Promise.all(promises);
+        return this.server.start();
     }
 
     public addRoutes(routeObjects: IRouteOptions | IRouteOptions[]): void {
-        for (const server of this.servers) {
-            server.addRoutes(routeObjects);
-        }
+        this.server.addRoutes(routeObjects);
     }
 
     private addMonitoringRoutes(): void {

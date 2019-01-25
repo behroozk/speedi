@@ -2,19 +2,21 @@ import * as Logger from 'console';
 import * as Joi from 'joi';
 
 import * as Speedi from '../index';
+import { ServerType } from '../src/server/type.enum';
 import { speediConfig } from './config/speedi';
 
 function start(): void {
     Speedi.Config.initialize(speediConfig);
 
     const app = new Speedi.App({
-        http: {
+        httpOptions: {
             allowedOrigins: [/\.supplyhub\.com$/],
             host: 'localhost',
             port: 3002,
             protocol: 'http',
         },
         name: 'speedi-test',
+        serverType: ServerType.Express,
     });
 
     app.addRoutes([

@@ -9,14 +9,14 @@ import * as morgan from 'morgan';
 
 import * as RouteExpress from '../route/express';
 import { IRouteOptions } from '../route/options.interface';
-import { IHttpServerOptions } from './http_options.interface';
+import { IServerOptions } from './http_options.interface';
 import { IServer } from './index.interface';
 
 export class ExpressServer implements IServer {
     private app: express.Express;
     private server: http.Server | undefined;
 
-    constructor(private options: IHttpServerOptions) {
+    constructor(private options: IServerOptions) {
         if (!this.options.protocol) {
             this.options.protocol = 'http';
         }

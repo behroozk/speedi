@@ -1,8 +1,8 @@
-import { IHttpServerOptions } from '../server/http_options.interface';
-import { IRpcServerOptions } from '../server/rpc_options.interface';
+import { IServerOptions } from '../server/http_options.interface';
+import { ServerType } from '../server/type.enum';
 
 export interface IAppOptions {
-    http?: IHttpServerOptions;
+    httpOptions: IServerOptions;
     name: string;
-    rpc?: IRpcServerOptions;
+    serverType: ServerType;
 }

@@ -10,6 +10,7 @@ import { IPayloadFile } from './src/payload/file.interface';
 import { IRateLimiterOptions } from './src/rate_limiter/options.interface';
 import { RouteMethod } from './src/route/method.enum';
 import { IRouteOptions } from './src/route/options.interface';
+import { ServerType } from './src/server/type.enum';
 
 export {
     App,
@@ -24,4 +25,5 @@ export {
     ErrorType,
     FixedResponse,
     RouteMethod,
+    ServerType,
 };

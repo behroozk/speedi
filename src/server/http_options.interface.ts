@@ -1,4 +1,4 @@
-export interface IHttpServerOptions {
+export interface IServerOptions {
     allowedOrigins?: Array<string | RegExp>;
     host: string;
     port: number;
