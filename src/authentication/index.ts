@@ -6,42 +6,38 @@ import { ErrorType } from '../error/type.enum';
 import { Logger } from '../logger/';
 import { IAuthenticationOptions } from './options.interface';
 
-export class Authentication {
-    public static decode(encodedToken: string): Authentication | null {
-        try {
-            const verifiedToken = jwt.verify(encodedToken, Config.authentication.secretKey);
+export function decode(encodedToken: string): string | object | null {
+    try {
+        const verifiedToken = jwt.verify(encodedToken, Config.authentication.secretKey);
 
-            return new Authentication(verifiedToken);
-        } catch (error) {
-            Logger.error(error);
-            return null;
-        }
+        return verifiedToken;
+    } catch (error) {
+        Logger.error(error);
+        return null;
+    }
+}
+
+export async function verify(
+    encodedToken: string | undefined,
+    payload: any,
+    options: IAuthenticationOptions,
+): Promise<string | object> {
+    if (!encodedToken) {
+        throw new RequestError(ErrorType.Unauthorized);
     }
 
-    public static async verify(
-        encodedToken: string | undefined,
-        payload: any,
-        options: IAuthenticationOptions,
-    ): Promise<Authentication> {
-        if (!encodedToken) {
-            throw new RequestError(ErrorType.Unauthorized);
-        }
+    const authentication: string | object | null = decode(encodedToken);
 
-        const authentication: Authentication | null = Authentication.decode(encodedToken);
-
-        if (!authentication) {
-            throw new RequestError(ErrorType.Unauthorized);
-        }
-
-        const promises = options.authenticators.map((authenticator) => authenticator(authentication.token, payload));
-
-        const isAuthenticated = await Promise.all(promises);
-        if (!isAuthenticated.every((auth) => auth)) {
-            throw new RequestError(ErrorType.Unauthorized, 'authentication failed');
-        }
-
-        return authentication;
+    if (!authentication) {
+        throw new RequestError(ErrorType.Unauthorized);
     }
 
-    constructor(public token: any) { }
+    const promises = options.authenticators.map((authenticator) => authenticator(authentication, payload));
+
+    const isAuthenticated = await Promise.all(promises);
+    if (!isAuthenticated.every((auth) => auth)) {
+        throw new RequestError(ErrorType.Unauthorized, 'authentication failed');
+    }
+
+    return authentication;
 }
