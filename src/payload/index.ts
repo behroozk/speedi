@@ -10,16 +10,14 @@ const ajv = new Ajv({
     removeAdditional: 'all',
 });
 
-export class Payload {
-    public static validate(payload: any, schema: Joi.SchemaMap): any {
-        const result = Joi.validate(payload, schema, { stripUnknown: true });
+export function validateJoi(payload: any, schema: Joi.SchemaMap): any {
+    const result = Joi.validate(payload, schema, { stripUnknown: true });
 
-        if (result.error) {
-            throw new RequestError(ErrorType.BadRequest, 'Invalid payload', result.error.details);
-        }
-
-        return result.value;
+    if (result.error) {
+        throw new RequestError(ErrorType.BadRequest, 'Invalid payload', result.error.details);
     }
+
+    return result.value;
 }
 
 export function validateJsonSchema(payload: any, schema: any): any {

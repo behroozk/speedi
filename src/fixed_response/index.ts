@@ -1,6 +1,5 @@
 import * as Express from 'express';
 
-import { IRpcResponse } from '../rpc/response.interface';
 import { IFixedResponseMetadata } from './metadata.interface';
 import { FixedResponseType } from './type.enum';
 
@@ -25,13 +24,5 @@ export class FixedResponse {
         }
 
         return false;
-    }
-
-    public rpc(res: IRpcResponse): IRpcResponse {
-        if (this.type === FixedResponseType.Redirect && this.metadata.path) {
-            res.redirect = this.metadata.path;
-        }
-
-        return res;
     }
 }
