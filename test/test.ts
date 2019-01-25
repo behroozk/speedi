@@ -4,8 +4,8 @@ import * as Joi from 'joi';
 import * as Speedi from '../index';
 import { speediConfig } from './config/speedi';
 
-async function start(): Promise<void> {
-    await Speedi.Config.initialize(speediConfig);
+function start(): void {
+    Speedi.Config.initialize(speediConfig);
 
     const app = new Speedi.App({
         http: {
@@ -20,13 +20,15 @@ async function start(): Promise<void> {
     app.addRoutes([
         {
             authentication: {
-                authenticators: [async (token: { test: number }, payload: any) => {
-                    if (token.test) {
-                        token.test = 1;
-                        payload.blah = 2;
-                    }
-                    return true;
-                }],
+                authenticators: [
+                    async (token: { test: number }, payload: any) => {
+                        if (token.test) {
+                            token.test = 1;
+                            payload.blah = 2;
+                        }
+                        return true;
+                    },
+                ],
             },
             controller: sendFile,
             description: 'Send EDI documents through AS2',
@@ -40,6 +42,29 @@ async function start(): Promise<void> {
                 res,
                 toId: req.params.toId,
             }),
+            schema: {
+                $schema: 'http://json-schema.org/draft-07/schema#',
+                properties: {
+                    files: {
+                        items: {
+                            type: 'object',
+                        },
+                        type: 'array',
+                    },
+                    headers: {
+                        type: 'object',
+                    },
+                    res: {
+                        type: 'object',
+                    },
+                    toId: {
+                        type: 'number',
+                    },
+                },
+                required: ['files', 'toId'],
+                title: 'send file schema',
+                type: 'object',
+            },
             validate: {
                 files: Joi.array().required(),
                 headers: Joi.object().required(),
