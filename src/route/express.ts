@@ -80,9 +80,9 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
                 .json(controllerOutput)
                 .end();
         } catch (error) {
-            const { status, message, metadata } = extractErrorData(error);
+            const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(status).send({ message, metadata }).end();
+            return res.status(statusCode).send({ message, metadata }).end();
         }
     });
 
@@ -109,17 +109,28 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
     return router;
 }
 
-function extractErrorData(error: Error): { status: number, message: string, metadata: any } {
-    let status: number = 500;
+function extractErrorData(error: Error): { statusCode: number, code: string; message: string, metadata: any } {
+    let statusCode: number = 500;
+    let code: string = 'bad_request';
     const message = error.message;
     let metadata: any = {};
 
     if (error instanceof RequestError) {
-        status = error.code;
+        statusCode = error.code;
         metadata = error.metadata;
     }
 
-    return { status, message, metadata };
+    const anyError: any = error;
+
+    if (anyError.statusCode) {
+        statusCode = anyError.statusCode;
+    }
+
+    if (anyError.code) {
+        code = anyError.code;
+    }
+
+    return { statusCode, code, message, metadata };
 }
 
 function authenticator(options: IAuthenticationOptions): express.RequestHandler {
@@ -133,9 +144,9 @@ function authenticator(options: IAuthenticationOptions): express.RequestHandler 
 
             return next();
         } catch (error) {
-            const { status, message, metadata } = extractErrorData(error);
+            const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(status).send({ message, metadata }).end();
+            return res.status(statusCode).send({ message, metadata }).end();
         }
     };
 }
@@ -149,9 +160,9 @@ function payloadSetup(
 
             return next();
         } catch (error) {
-            const { status, message, metadata } = extractErrorData(error);
+            const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(status).send({ message, metadata }).end();
+            return res.status(statusCode).send({ message, metadata }).end();
         }
     };
 }
@@ -163,9 +174,9 @@ function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
 
             return next();
         } catch (error) {
-            const { status, message, metadata } = extractErrorData(error);
+            const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(status).send({ message, metadata }).end();
+            return res.status(statusCode).send({ message, metadata }).end();
         }
     };
 }
@@ -177,9 +188,9 @@ function payloadValidatorJoi(schema: Joi.SchemaMap): express.RequestHandler {
 
             return next();
         } catch (error) {
-            const { status, message, metadata } = extractErrorData(error);
+            const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(status).send({ message, metadata }).end();
+            return res.status(statusCode).send({ message, metadata }).end();
         }
     };
 }
@@ -206,9 +217,9 @@ function rateLimiter(options: IRateLimiterOptions): express.RequestHandler {
 
             return next();
         } catch (error) {
-            const { status, message, metadata } = extractErrorData(error);
+            const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(status).send({ message, metadata }).end();
+            return res.status(statusCode).send({ message, metadata }).end();
         }
     };
 }
@@ -236,9 +247,9 @@ function cacher(options: ICacherOptions): express.RequestHandler {
                 return res.set('Content-Type', cachedResponse.header).send(cachedResponse.body).end();
             }
         } catch (error) {
-            const { status, message, metadata } = extractErrorData(error);
+            const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(status).send({ message, metadata }).end();
+            return res.status(statusCode).send({ message, metadata }).end();
         }
     };
 }
