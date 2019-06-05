@@ -23,11 +23,16 @@ function start(): void {
         {
             authentication: {
                 authenticators: [
-                    async (token: { test: number }, payload: any) => {
-                        if (token.test) {
-                            token.test = 1;
+                    async (token: { name: string }, payload: any) => {
+                        if (token.name) {
+                            token.name = "CHANGED";
                             payload.blah = 2;
+                            return true;
                         }
+                        return false;
+                    },
+                    async (token: { test: number }, payload: any) => {
+                        payload.blooh = 12;
                         return true;
                     },
                 ],
