@@ -6,7 +6,7 @@ import { ErrorType } from '../error/type.enum';
 import { Logger } from '../logger/';
 import { IAuthenticationOptions } from './options.interface';
 
-export function decode(encodedToken: string): string | object | null {
+function decode(encodedToken: string): string | object | null {
     try {
         const verifiedToken = jwt.verify(encodedToken, Config.authentication.secretKey);
 
@@ -26,18 +26,19 @@ export async function verify(
         throw new RequestError(ErrorType.Unauthorized);
     }
 
-    const authentication: string | object | null = decode(encodedToken);
+    const decodedToken: string | object | null = decode(encodedToken);
 
-    if (!authentication) {
+    if (!decodedToken) {
         throw new RequestError(ErrorType.Unauthorized);
     }
 
-    const promises = options.authenticators.map((authenticator) => authenticator(authentication, payload));
+    for (const authenticator of options.authenticators) {
+        const isAuthenticated = await authenticator(decodedToken, payload);
 
-    const isAuthenticated = await Promise.all(promises);
-    if (!isAuthenticated.every((auth) => auth)) {
-        throw new RequestError(ErrorType.Unauthorized, 'authentication failed');
+        if (!isAuthenticated) {
+            throw new RequestError(ErrorType.Unauthorized, 'authentication failed');
+        }
     }
 
-    return authentication;
+    return decodedToken;
 }
