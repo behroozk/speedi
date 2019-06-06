@@ -33,6 +33,10 @@ export function generate(routeObjects: IRouteOptions | IRouteOptions[]): express
 function setupRoute(router: express.Router, routeObject: IRouteOptions): express.Router {
     const middlewares: express.RequestHandler[] = [];
 
+    if (routeObject.authentication) {
+        middlewares.push(authenticator(routeObject.authentication));
+    }
+
     if (routeObject.files) {
         middlewares.push(Multer().any());
     }
@@ -45,10 +49,6 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
         middlewares.push(payloadValidatorJsonSchema(routeObject.schema));
     } else if (routeObject.validate) {
         middlewares.push(payloadValidatorJoi(routeObject.validate));
-    }
-
-    if (routeObject.authentication) {
-        middlewares.push(authenticator(routeObject.authentication));
     }
 
     if (routeObject.rateLimit) {
