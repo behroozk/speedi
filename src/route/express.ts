@@ -136,11 +136,8 @@ function extractErrorData(error: Error): { statusCode: number, code: string; mes
 function authenticator(options: IAuthenticationOptions): express.RequestHandler {
     return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
         try {
-            res.locals.authenticationPayload = res.locals.authenticationPayload || {};
-
-            res.locals.authenticationToken = await Authentication.verify(
+            [res.locals.authenticationToken, res.locals.authenticationPayload] = await Authentication.verify(
                 (req.get('Authorization') || '').split(' ')[1],
-                res.locals.authenticationPayload,
                 options,
             );
 

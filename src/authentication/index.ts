@@ -19,9 +19,8 @@ function decode(encodedToken: string): string | object | null {
 
 export async function verify(
     encodedToken: string | undefined,
-    payload: any,
     options: IAuthenticationOptions,
-): Promise<string | object> {
+): Promise<[string | object, any]> {
     if (!encodedToken) {
         throw new RequestError(ErrorType.Unauthorized);
     }
@@ -32,6 +31,8 @@ export async function verify(
         throw new RequestError(ErrorType.Unauthorized);
     }
 
+    const payload: any = {};
+
     for (const authenticator of options.authenticators) {
         const isAuthenticated = await authenticator(decodedToken, payload);
 
@@ -40,5 +41,5 @@ export async function verify(
         }
     }
 
-    return decodedToken;
+    return [decodedToken, payload];
 }
