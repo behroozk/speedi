@@ -1,4 +1,3 @@
-import * as bodyParser from 'body-parser';
 import * as compression from 'compression';
 import * as Logger from 'console';
 import * as cors from 'cors';
@@ -25,8 +24,8 @@ export class ExpressServer implements IServer {
 
         this.app.use(helmet());
         this.app.use(morgan('dev'));
-        this.app.use(bodyParser.urlencoded({ extended: false }));
-        this.app.use(bodyParser.json());
+        this.app.use(express.urlencoded({ extended: false }));
+        this.app.use(express.json());
         this.app.use(compression());
         if (this.options.allowedOrigins) {
             this.app.use(cors({

@@ -94,6 +94,39 @@ function start(): void {
                 email: Joi.string().email().required(),
             },
         },
+        {
+            cache: {
+                expire: 1000 * 20,
+                keyGenerator: (req) => `${req.headers.authorization}`,
+            },
+            controller: async ({ email, password }: { email: string, password: string }) => {
+                return {
+                    success: password === "test1234",
+                    token: Buffer.from(`${email}:${password}`).toString("base64"),
+                };
+            },
+            description: 'test route #3',
+            method: Speedi.RouteMethod.Post,
+            name: 'test3',
+            path: '/test3',
+            payload: (req) => ({
+                email: req.body.email,
+                password: req.body.password,
+            }),
+            schema: {
+                $schema: "http://json-schema.org/draft-07/schema#",
+                additionalProperties: false,
+                properties: {
+                    email: {
+                        format: "email",
+                        minLength: 1,
+                        type: "string",
+                    },
+                    password: { minLength: 1, type: "string" },
+                },
+                required: ["email", "password"],
+            },
+        },
     ]);
 
     app.run();
