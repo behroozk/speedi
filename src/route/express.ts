@@ -1,5 +1,4 @@
 import * as express from 'express';
-import * as http from 'http';
 import * as Joi from 'joi';
 import * as Multer from 'multer';
 
@@ -225,9 +224,14 @@ function rateLimiter(options: IRateLimiterOptions): express.RequestHandler {
 
 function cacher(options: ICacherOptions): express.RequestHandler {
     return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+        let key: string;
         try {
-            const key: string = getCacheKey(options, req, res);
+            key = getCacheKey(options, req, res);
+        } catch {
+            return next();
+        }
 
+        try {
             const cachedResponse = await Cache.retrieve(key);
             if (!cachedResponse) {
                 storeResponse(res);
@@ -241,6 +245,7 @@ function cacher(options: ICacherOptions): express.RequestHandler {
                         Cache.store(key, cache, options.expire);
                     }
                 });
+
                 return next();
             } else {
                 return res.set('Content-Type', cachedResponse.header).send(cachedResponse.body).end();
@@ -275,8 +280,8 @@ function getCacheKey(options: ICacherOptions, req: express.Request, res: express
             keyParts.push(JSON.stringify(authentication));
         }
 
-        return `cache_${keyParts.join('_')}`;
+        return keyParts.join('_');
     } else {
-        return `cache_${options.keyGenerator(req)}`;
+        return options.keyGenerator(req);
     }
 }

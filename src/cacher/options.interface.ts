@@ -1,7 +1,7 @@
-import * as http from 'http';
+import * as Express from 'express';
 
 export interface ICacherOptions {
     expire: number;
     authBased?: boolean;
-    keyGenerator?: (req: http.IncomingMessage) => string;
+    keyGenerator?: (req: Express.Request) => string;
 }
