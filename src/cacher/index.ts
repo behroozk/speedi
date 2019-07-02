@@ -36,7 +36,8 @@ export function store(key: string, value: ICachedValue, expire: number): Promise
 
     // TODO: combine set and expire in one method
     dataStore.set(key, JSON.stringify(value));
-    return dataStore.expire(key, expire);
+    // expire is in ms, but redis uses seconds
+    return dataStore.expire(key, Math.floor(expire / 1000));
 }
 
 function parseCachedResponse(key: string, cahcedValue: string): ICachedValue | Error {
