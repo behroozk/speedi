@@ -31,6 +31,10 @@ export class App {
         this.server.addRoutes(routeObjects);
     }
 
+    public getRawApp(): any {
+        return this.server.getRawApp();
+    }
+
     private addMonitoringRoutes(): void {
         this.addRoutes({
             controller: async () => {

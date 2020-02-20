@@ -67,4 +67,8 @@ export class ExpressServer implements IServer {
     public addRoutes(routeObjects: IRouteOptions[] | IRouteOptions): void {
         this.app.use(RouteExpress.generate(routeObjects));
     }
+
+    public getRawApp(): express.Express {
+        return this.app;
+    }
 }
