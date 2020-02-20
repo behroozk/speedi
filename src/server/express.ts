@@ -23,7 +23,9 @@ export class ExpressServer implements IServer {
         this.app = express();
 
         this.app.use(helmet());
-        this.app.use(morgan('dev'));
+        if (this.options.logRequests) {
+            this.app.use(morgan('dev'));
+        }
         this.app.use(express.urlencoded({ extended: false }));
         this.app.use(express.json());
         this.app.use(compression());
