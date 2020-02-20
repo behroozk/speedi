@@ -8,6 +8,7 @@ const ajv = new Ajv({
     allErrors: true,
     coerceTypes: true,
     removeAdditional: 'all',
+    useDefaults: true,
 });
 
 export function validateJoi(payload: any, schema: Joi.SchemaMap): any {
