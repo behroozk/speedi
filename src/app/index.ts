@@ -47,7 +47,6 @@ export class App {
             },
             description: 'health check',
             method: RouteMethod.Get,
-            name: 'health',
             path: '/health',
         });
     }

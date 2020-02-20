@@ -8,7 +8,6 @@ import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
 
 export interface IRouteOptions {
-    name: string;
     description: string;
     method: RouteMethod;
     path: string;
