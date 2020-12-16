@@ -152,10 +152,10 @@ function authenticator(options: IAuthenticationOptions): express.RequestHandler 
     };
 }
 
-function runMiddleware(middlware: (req: express.Request, res: express.Response) => void): express.RequestHandler {
+function runMiddleware(middlware: (req: express.Request, res: express.Response) => Promise<void>): express.RequestHandler {
     return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
         try {
-            middlware(req, res);
+            await middlware(req, res);
             next();
         } catch (error) {
             const { statusCode, message, metadata } = extractErrorData(error);

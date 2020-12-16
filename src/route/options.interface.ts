@@ -13,7 +13,7 @@ export interface IRouteOptions {
     controller: (...args: any[]) => Promise<any>;
     authentication?: IAuthenticationOptions;
     files?: boolean;
-    middlewares?: ((request: express.Request, response: express.Response) => void)[];
+    middlewares?: ((request: express.Request, response: express.Response) => Promise<void>)[];
     payload?: (request: express.Request, response: express.Response) => any;
     schema?: JSONSchema7;
     rateLimit?: IRateLimiterOptions;
