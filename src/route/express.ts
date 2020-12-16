@@ -1,5 +1,4 @@
 import * as express from 'express';
-import * as Joi from 'joi';
 import * as Multer from 'multer';
 
 import * as Authentication from '../authentication/index';
@@ -9,7 +8,7 @@ import { ICacherOptions } from '../cacher/options.interface';
 import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
 import { FixedResponse } from '../fixed_response';
-import { validateJoi, validateJsonSchema } from '../payload/index';
+import { validateJsonSchema } from '../payload/index';
 import { rateLimit } from '../rate_limiter/index';
 import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
@@ -46,8 +45,6 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
 
     if (routeObject.schema) {
         middlewares.push(payloadValidatorJsonSchema(routeObject.schema));
-    } else if (routeObject.validate) {
-        middlewares.push(payloadValidatorJoi(routeObject.validate));
     }
 
     if (routeObject.rateLimit) {
@@ -165,10 +162,12 @@ function payloadSetup(
     };
 }
 
-function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
+function payloadSetup(
+    payloadGenerator: (request: express.Request, response: express.Response) => any,
+): express.RequestHandler {
     return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
         try {
-            res.locals.payload = validateJsonSchema(res.locals.payload, schema);
+            res.locals.payload = payloadGenerator(req, res);
 
             return next();
         } catch (error) {
@@ -179,10 +178,10 @@ function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
     };
 }
 
-function payloadValidatorJoi(schema: Joi.SchemaMap): express.RequestHandler {
+function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
     return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
         try {
-            res.locals.payload = validateJoi(res.locals.payload, schema);
+            res.locals.payload = validateJsonSchema(res.locals.payload, schema);
 
             return next();
         } catch (error) {

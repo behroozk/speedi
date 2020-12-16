@@ -1,5 +1,5 @@
-import * as Ajv from 'ajv';
-import * as Joi from 'joi';
+import Ajv from 'ajv';
+import { JSONSchema7 } from 'json-schema';
 
 import { RequestError } from '../error/request';
 import { ErrorType } from '../error/type.enum';
@@ -11,17 +11,7 @@ const ajv = new Ajv({
     useDefaults: true,
 });
 
-export function validateJoi(payload: any, schema: Joi.SchemaMap): any {
-    const result = Joi.validate(payload, schema, { stripUnknown: true });
-
-    if (result.error) {
-        throw new RequestError(ErrorType.BadRequest, 'Invalid payload', result.error.details);
-    }
-
-    return result.value;
-}
-
-export function validateJsonSchema(payload: any, schema: any): any {
+export function validateJsonSchema(payload: any, schema: JSONSchema7): any {
     const validate = ajv.compile(schema);
 
     const validatedPayload = validate(payload);

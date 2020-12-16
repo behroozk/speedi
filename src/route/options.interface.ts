@@ -1,5 +1,4 @@
 import * as express from 'express';
-import * as Joi from 'joi';
 import { JSONSchema7 } from "json-schema";
 
 import { IAuthenticationOptions } from '../authentication/options.interface';
@@ -16,7 +15,6 @@ export interface IRouteOptions {
     files?: boolean;
     payload?: (request: express.Request, response: express.Response) => any;
     schema?: JSONSchema7;
-    validate?: Joi.SchemaMap;
     rateLimit?: IRateLimiterOptions;
     cache?: ICacherOptions;
 }
