@@ -39,6 +39,12 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
         middlewares.push(Multer().any());
     }
 
+    if (routeObject.middlewares) {
+        for (const middleware of routeObject.middlewares) {
+            middlewares.push(runMiddleware(middleware));
+        }
+    }
+
     if (routeObject.payload) {
         middlewares.push(payloadSetup(routeObject.payload));
     }
@@ -146,14 +152,11 @@ function authenticator(options: IAuthenticationOptions): express.RequestHandler 
     };
 }
 
-function payloadSetup(
-    payloadGenerator: (request: express.Request, response: express.Response) => any,
-): express.RequestHandler {
-    return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+function runMiddleware(middlware: (req: express.Request, res: express.Response) => void): express.RequestHandler {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
         try {
-            res.locals.payload = payloadGenerator(req, res);
-
-            return next();
+            middlware(req, res);
+            next();
         } catch (error) {
             const { statusCode, message, metadata } = extractErrorData(error);
 
