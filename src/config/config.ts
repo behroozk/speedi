@@ -1,5 +1,6 @@
-import * as Joi from 'joi';
+import { JSONSchema7 } from "json-schema";
 
+import { validateJsonSchema } from '../payload';
 import { IConfig, IConfigApp, IConfigAuthentication, IConfigDataStore, IConfigRedis } from './index.interface';
 
 export class Config {
@@ -9,40 +10,55 @@ export class Config {
     public static redis: IConfigRedis;
 
     public static initialize(config: Partial<IConfig>): void {
-        const result = Joi.validate(config, this.schema);
+        const result: IConfig = validateJsonSchema(config, this.schema);
 
-        if (result.error) {
-            throw new Error(result.error.message);
-        } else {
-            const processedConfig: IConfig = result.value as IConfig;
-            this.setConfig(processedConfig);
-        }
+        this.setConfig(result);
     }
 
-    private static schema: Joi.SchemaMap = {
-        app: Joi.object({
-            nodeEnv: Joi.string().optional().default('development'),
-        }).optional().default({
-            nodeEnv: 'development',
-        }),
-        authentication: Joi.object({
-            secretKey: Joi.string().required(),
-            tokenLifeTime: Joi.number().optional().default(30 * 24 * 60 * 60 * 1000),
-        }).required(),
-        dataStore: Joi.object({
-            prefix: Joi.string().empty('').optional().default(''),
-            type: Joi.string().optional().default('redis'),
-        }).optional().default({
-            prefix: '',
-            type: 'redis',
-        }),
-        redis: Joi.object({
-            host: Joi.string().required(),
-            password: Joi.string().empty('').optional().default(''),
-            port: Joi.number().optional().default(6379),
-            protocol: Joi.string().empty('').optional().default(''),
-            username: Joi.string().empty('').optional().default(''),
-        }).required(),
+    private static schema: JSONSchema7 = {
+        additionalProperties: false,
+        properties: {
+            app: {
+                additionalProperties: false,
+                properties: {
+                    nodeEnv: { default: "development", type: "string" },
+                },
+                required: [],
+                type: "object",
+            },
+            authentication: {
+                additionalProperties: false,
+                properties: {
+                    secretKey: { minLength: 1, type: "string" },
+                    tokenLifeTime: { default: 30 * 24 * 60 * 60 * 1000, type: "number" },
+                },
+                required: ["secretKey"],
+                type: "object",
+            },
+            dataStore: {
+                additionalProperties: false,
+                properties: {
+                    prefix: { default: "", type: "string" },
+                    type: { default: "redis", type: "string" },
+                },
+                required: [],
+                type: "object",
+            },
+            redis: {
+                additionalProperties: false,
+                properties: {
+                    host: { minLength: 1, type: "string" },
+                    password: { type: "string" },
+                    port: { default: 6379, type: "number" },
+                    protocol: { type: "string" },
+                    username: { type: "string" },
+                },
+                required: ["host"],
+                type: "object",
+            },
+        },
+        required: [],
+        type: "object",
     };
 
     private static setConfig(config: IConfig): void {
