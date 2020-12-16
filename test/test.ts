@@ -1,6 +1,3 @@
-import * as Logger from 'console';
-import * as Joi from 'joi';
-
 import * as Speedi from '../index';
 import { ServerType } from '../src/server/type.enum';
 import { speediConfig } from './config/speedi';
@@ -12,6 +9,7 @@ function start(): void {
         httpOptions: {
             allowedOrigins: [/\.supplyhub\.com$/],
             host: 'localhost',
+            logRequests: true,
             port: 3002,
             protocol: 'http',
         },
@@ -41,7 +39,6 @@ function start(): void {
             description: 'Send EDI documents through AS2',
             files: true,
             method: Speedi.RouteMethod.Post,
-            name: 'sendFile',
             path: '/send/:toId',
             payload: (req, res) => ({
                 files: req.files,
@@ -72,27 +69,24 @@ function start(): void {
                 title: 'send file schema',
                 type: 'object',
             },
-            validate: {
-                files: Joi.array().required(),
-                headers: Joi.object().required(),
-                res: Joi.object().required(),
-                toId: Joi.string().required(),
-            },
         },
         {
             controller: async ({ email }: { email: string }) => {
-                return Speedi.FixedResponse.redirect(`http://www.supplyhub.com`, 300);
+                return Speedi.FixedResponse.redirect(`http://www.supplyhub.com/${email}`, 300);
             },
             description: 'test route #2',
-            method: Speedi.RouteMethod.Post,
-            name: 'test2',
+            method: Speedi.RouteMethod.Get,
+            middlewares: [
+                (req, res) => {
+                    const email = req.query.email;
+                    res.locals.email = email
+                    throw new Error(email?.toString());
+                },
+            ],
             path: '/test2',
-            payload: (req) => ({
-                email: req.body.email,
+            payload: (req, res) => ({
+                email: res.locals.email,
             }),
-            validate: {
-                email: Joi.string().email().required(),
-            },
         },
         {
             cache: {
@@ -107,7 +101,6 @@ function start(): void {
             },
             description: 'test route #3',
             method: Speedi.RouteMethod.Post,
-            name: 'test3',
             path: '/test3',
             payload: (req) => ({
                 email: req.body.email,
