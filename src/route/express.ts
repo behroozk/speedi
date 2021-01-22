@@ -62,12 +62,12 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
     }
 
     middlewares.push(async (
-        req: express.Request,
+        _: express.Request,
         res: express.Response,
-        next: express.NextFunction,
+        __: express.NextFunction,
     ): Promise<void> => {
         try {
-            const controllerOutput: any = await routeObject.controller.call(null, res.locals.payload);
+            const controllerOutput: any = await routeObject.controller(res.locals.payload);
 
             if (controllerOutput instanceof FixedResponse) {
                 controllerOutput.express(res);
