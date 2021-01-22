@@ -1,4 +1,5 @@
 import Ajv from 'ajv';
+import AjvFormats from "ajv-formats"
 import { JSONSchema7 } from 'json-schema';
 
 import { RequestError } from '../error/request';
@@ -10,6 +11,7 @@ const ajv = new Ajv({
     removeAdditional: 'all',
     useDefaults: true,
 });
+AjvFormats(ajv);
 
 export function validateJsonSchema(payload: any, schema: JSONSchema7): any {
     const validate = ajv.compile(schema);
