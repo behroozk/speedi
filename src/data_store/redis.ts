@@ -1,7 +1,7 @@
+import * as Logger from "console";
 import * as redis from 'redis';
 
 import { Config } from '../config/config';
-import { Logger } from '../logger/';
 import { IDataStoreClient } from './client.interface';
 
 export class RedisClient implements IDataStoreClient {
