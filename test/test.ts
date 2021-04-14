@@ -19,22 +19,6 @@ function start(): void {
 
     app.addRoutes([
         {
-            authentication: {
-                authenticators: [
-                    async (token: { name: string }, payload: any) => {
-                        if (token.name) {
-                            token.name = "CHANGED";
-                            payload.blah = 2;
-                            return true;
-                        }
-                        return false;
-                    },
-                    async (token: { test: number }, payload: any) => {
-                        payload.blooh = 12;
-                        return true;
-                    },
-                ],
-            },
             controller: sendFile,
             description: 'Send EDI documents through AS2',
             files: true,
@@ -89,10 +73,6 @@ function start(): void {
             }),
         },
         {
-            cache: {
-                expire: 1000 * 20,
-                keyGenerator: (req) => `${req.headers.authorization}`,
-            },
             controller: async ({ email, password }: { email: string, password: string }) => {
                 return {
                     success: password === "test1234",
