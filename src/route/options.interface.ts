@@ -1,8 +1,6 @@
 import * as express from 'express';
 import { JSONSchema7 } from "json-schema";
 
-import { IAuthenticationOptions } from '../authentication/options.interface';
-import { ICacherOptions } from '../cacher/options.interface';
 import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
 
@@ -16,5 +14,4 @@ export interface IRouteOptions {
     payload?: (request: express.Request, response: express.Response) => any;
     schema?: JSONSchema7;
     rateLimit?: IRateLimiterOptions;
-    cache?: ICacherOptions;
 }

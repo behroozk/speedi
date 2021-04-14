@@ -1,11 +1,6 @@
 import * as express from 'express';
 import * as Multer from 'multer';
 
-import * as Authentication from '../authentication/index';
-import { IAuthenticationOptions } from '../authentication/options.interface';
-import * as Cache from '../cacher/index';
-import { ICacherOptions } from '../cacher/options.interface';
-import { ICachedValue } from '../cacher/value.interface';
 import { RequestError } from '../error/request';
 import { FixedResponse } from '../fixed_response';
 import { validateJsonSchema } from '../payload/index';
@@ -51,10 +46,6 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
 
     if (routeObject.rateLimit) {
         middlewares.push(rateLimiter(routeObject.rateLimit));
-    }
-
-    if (routeObject.cache) {
-        middlewares.push(cacher(routeObject.cache));
     }
 
     middlewares.push(async (
@@ -201,68 +192,4 @@ function rateLimiter(options: IRateLimiterOptions): express.RequestHandler {
             return res.status(statusCode).send({ message, metadata }).end();
         }
     };
-}
-
-function cacher(options: ICacherOptions): express.RequestHandler {
-    return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-        let key: string;
-        try {
-            key = getCacheKey(options, req, res);
-        } catch {
-            return next();
-        }
-
-        try {
-            const cachedResponse = await Cache.retrieve(key);
-            if (!cachedResponse) {
-                storeResponse(res);
-                res.on('finish', () => {
-                    if (res.statusCode === 200 && res.locals.body) {
-                        const cache: ICachedValue = {
-                            body: res.locals.body,
-                            header: res.get('Content-Type'),
-                        };
-
-                        Cache.store(key, cache, options.expire);
-                    }
-                });
-
-                return next();
-            } else {
-                return res.set('Content-Type', cachedResponse.header).send(cachedResponse.body).end();
-            }
-        } catch (error) {
-            const { statusCode, message, metadata } = extractErrorData(error);
-
-            return res.status(statusCode).send({ message, metadata }).end();
-        }
-    };
-}
-
-function storeResponse(res: express.Response): void {
-    const originalSend = res.send.bind(res);
-
-    res.send = function send(body: any) {
-        res.locals.body = body;
-        return originalSend(body);
-    };
-}
-
-function getCacheKey(options: ICacherOptions, req: express.Request, res: express.Response): string {
-    if (!options.keyGenerator) {
-        const keyParts: string[] = [
-            req.ip,
-            req.method,
-            req.originalUrl,
-        ];
-
-        if (options.authBased && res.locals.authentication) {
-            const authentication: string | object = res.locals.authentication;
-            keyParts.push(JSON.stringify(authentication));
-        }
-
-        return keyParts.join('_');
-    } else {
-        return options.keyGenerator(req);
-    }
 }

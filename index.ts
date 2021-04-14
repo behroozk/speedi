@@ -1,6 +1,4 @@
 import { App } from './src/app/';
-import { IAuthenticationOptions } from './src/authentication/options.interface';
-import { ICacherOptions } from './src/cacher/options.interface';
 import { Config } from './src/config/config';
 import { IConfig } from './src/config/index.interface';
 import { RequestError } from './src/error/request';
@@ -15,8 +13,6 @@ import { ServerType } from './src/server/type.enum';
 export {
     App,
     Config,
-    IAuthenticationOptions,
-    ICacherOptions,
     IConfig,
     IRateLimiterOptions,
     IRouteOptions,
