@@ -31,10 +31,6 @@ export function generate(routeObjects: IRouteOptions | IRouteOptions[]): express
 function setupRoute(router: express.Router, routeObject: IRouteOptions): express.Router {
     const middlewares: express.RequestHandler[] = [];
 
-    if (routeObject.authentication) {
-        middlewares.push(authenticator(routeObject.authentication));
-    }
-
     if (routeObject.files) {
         middlewares.push(Multer().any());
     }
@@ -133,23 +129,6 @@ function extractErrorData(error: Error): { statusCode: number, code: string; mes
     }
 
     return { statusCode, code, message, metadata };
-}
-
-function authenticator(options: IAuthenticationOptions): express.RequestHandler {
-    return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
-        try {
-            [res.locals.authenticationToken, res.locals.authenticationPayload] = await Authentication.verify(
-                (req.get('Authorization') || '').split(' ')[1],
-                options,
-            );
-
-            return next();
-        } catch (error) {
-            const { statusCode, message, metadata } = extractErrorData(error);
-
-            return res.status(statusCode).send({ message, metadata }).end();
-        }
-    };
 }
 
 function runMiddleware(middlware: (req: express.Request, res: express.Response) => Promise<void>): express.RequestHandler {
