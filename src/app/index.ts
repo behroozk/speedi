@@ -21,10 +21,14 @@ export class App {
         }
     }
 
-    public async run(): Promise<boolean> {
+    public async start(): Promise<boolean> {
         this.addMonitoringRoutes();
 
         return this.server.start();
+    }
+
+    public stop(): Promise<boolean> {
+        return this.server.stop();
     }
 
     public addRoutes(routeObjects: IRouteOptions | IRouteOptions[]): void {

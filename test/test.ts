@@ -102,7 +102,7 @@ function start(): void {
         },
     ]);
 
-    app.run();
+    app.start();
 }
 
 start();
