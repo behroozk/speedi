@@ -10,7 +10,7 @@ export class App {
     private server: IServer;
 
     constructor(private options: IAppOptions) {
-        this.name = options.name;
+        this.name = this.options.name;
 
         switch (options.serverType) {
             case ServerType.Express:

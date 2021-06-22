@@ -5,6 +5,7 @@ import * as express from 'express';
 import * as helmet from 'helmet';
 import * as http from 'http';
 import * as morgan from 'morgan';
+import { DataStore } from '../data_store';
 
 import * as RouteExpress from '../route/express';
 import { IRouteOptions } from '../route/options.interface';
@@ -14,6 +15,7 @@ import { IServer } from './index.interface';
 export class ExpressServer implements IServer {
     private app: express.Express;
     private server: http.Server | undefined;
+    private rateLimitDataStore = new DataStore('ratelimit');
 
     constructor(private options: IServerOptions) {
         if (!this.options.protocol) {
@@ -37,8 +39,10 @@ export class ExpressServer implements IServer {
     }
 
     public start(): Promise<boolean> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
+                await this.rateLimitDataStore.start();
+
                 this.server = this.app.listen(
                     this.options.port,
                     this.options.host,
@@ -54,20 +58,23 @@ export class ExpressServer implements IServer {
     }
 
     public stop(): Promise<boolean> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve) => {
+            await this.rateLimitDataStore.stop();
+
             if (!this.server) {
                 return resolve(false);
             }
 
             this.server.close(() => {
                 Logger.log(`stopped server at ${this.options.host}:${this.options.port}`);
+                this.server = undefined;
                 resolve(true);
             });
         });
     }
 
     public addRoutes(routeObjects: IRouteOptions[] | IRouteOptions): void {
-        this.app.use(RouteExpress.generate(routeObjects));
+        this.app.use(RouteExpress.generate(routeObjects, this.rateLimitDataStore));
     }
 
     public getRawApp(): express.Express {

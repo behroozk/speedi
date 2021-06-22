@@ -4,7 +4,6 @@ import { ErrorType } from '../error/type.enum';
 import { IRateLimiterOptions } from './options.interface';
 import { IRateLimiterOutput } from './output.interface';
 
-let dataStore: DataStore | undefined;
 
 export async function rateLimit({
     waitTime = 15 * 60,
@@ -13,7 +12,7 @@ export async function rateLimit({
     requestsAllowedBeforeLimit = 100,
     message = 'Too many requests, please try again later',
     key,
-}: IRateLimiterOptions): Promise<IRateLimiterOutput | null> {
+}: IRateLimiterOptions, dataStore: DataStore): Promise<IRateLimiterOutput | null> {
     if (!key) {
         return null;
     }

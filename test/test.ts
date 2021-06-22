@@ -2,7 +2,7 @@ import * as Speedi from '../index';
 import { ServerType } from '../src/server/type.enum';
 import { speediConfig } from './config/speedi';
 
-function start(): void {
+async function start(): Promise<void> {
     Speedi.Config.initialize(speediConfig);
 
     const app = new Speedi.App({
@@ -102,7 +102,9 @@ function start(): void {
         },
     ]);
 
-    app.start();
+    await app.start();
+
+    await app.stop();
 }
 
 start();

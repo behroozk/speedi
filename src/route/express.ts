@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as Multer from 'multer';
+import { DataStore } from '../data_store';
 
 import { RequestError } from '../error/request';
 import { FixedResponse } from '../fixed_response';
@@ -9,21 +10,28 @@ import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
 import { IRouteOptions } from './options.interface';
 
-export function generate(routeObjects: IRouteOptions | IRouteOptions[]): express.Router {
+export function generate(
+    routeObjects: IRouteOptions | IRouteOptions[],
+    rateLimitDataStore: DataStore,
+): express.Router {
     const router = express.Router();
 
     if (!Array.isArray(routeObjects)) {
-        return setupRoute(router, routeObjects);
+        return setupRoute(router, routeObjects,rateLimitDataStore);
     } else {
         for (const routeObject of routeObjects) {
-            setupRoute(router, routeObject);
+            setupRoute(router, routeObject, rateLimitDataStore);
         }
     }
 
     return router;
 }
 
-function setupRoute(router: express.Router, routeObject: IRouteOptions): express.Router {
+function setupRoute(
+    router: express.Router,
+    routeObject: IRouteOptions,
+    rateLimitDataStore: DataStore,
+): express.Router {
     const middlewares: express.RequestHandler[] = [];
 
     if (routeObject.files) {
@@ -45,7 +53,7 @@ function setupRoute(router: express.Router, routeObject: IRouteOptions): express
     }
 
     if (routeObject.rateLimit) {
-        middlewares.push(rateLimiter(routeObject.rateLimit));
+        middlewares.push(rateLimiter(routeObject.rateLimit, rateLimitDataStore));
     }
 
     middlewares.push(async (
@@ -165,13 +173,16 @@ function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
     };
 }
 
-function rateLimiter(options: IRateLimiterOptions): express.RequestHandler {
+function rateLimiter(
+    options: IRateLimiterOptions,
+    rateLimitDataStore: DataStore,
+): express.RequestHandler {
     return async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
         try {
             options.key = options.keyGenerator ?
                 options.keyGenerator(req) : `ratelimit_${req.ip}_${req.method}_${req.originalUrl}`;
 
-            const result = await rateLimit(options);
+            const result = await rateLimit(options, rateLimitDataStore);
 
             if (result &&
                 !isNaN(result.requestsAllowedBeforeLimit) &&
