@@ -1,4 +1,6 @@
 export interface IDataStoreClient {
+    start(): Promise<void>;
+    stop(): Promise<void>;
     get(key: string): Promise<string | null>;
     set(ket: string, value: string): Promise<string>;
     del(key: string): Promise<boolean>;

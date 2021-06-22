@@ -22,6 +22,14 @@ export class DataStore {
         }
     }
 
+    public start(): Promise<void> {
+        return this.client.start();
+    }
+
+    public stop(): Promise<void> {
+        return this.client.stop();
+    }
+
     public get(key: string): Promise<string | null> {
         return this.client.get(this.prefix + key);
     }
