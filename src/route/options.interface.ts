@@ -8,10 +8,20 @@ export interface IRouteOptions {
     description: string;
     method: RouteMethod;
     path: string;
-    controller: (...args: any[]) => Promise<any>;
+
+    controller?: (...args: any[]) => Promise<any>;
     files?: boolean;
     middlewares?: ((request: express.Request, response: express.Response) => Promise<void>)[];
     payload?: (request: express.Request, response: express.Response) => any;
-    schema?: JSONSchema7;
+    proxy?: RouteProxyOptions;
     rateLimit?: IRateLimiterOptions;
+    schema?: JSONSchema7;
 }
+
+export type RouteProxyOptions = {
+    method: RouteMethod;
+    url: (request: express.Request, response: express.Response) => string;
+
+    headers?: (request: express.Request, response: express.Response) => Record<string, string>;
+    payload?: (request: express.Request, response: express.Response) => any;
+};

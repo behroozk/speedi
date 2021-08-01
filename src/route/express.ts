@@ -1,14 +1,16 @@
+import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as express from 'express';
+import { IncomingMessage } from 'http';
 import * as Multer from 'multer';
-import { DataStore } from '../data_store';
 
+import { DataStore } from '../data_store';
 import { RequestError } from '../error/request';
 import { FixedResponse } from '../fixed_response';
 import { validateJsonSchema } from '../payload/index';
 import { rateLimit } from '../rate_limiter/index';
 import { IRateLimiterOptions } from '../rate_limiter/options.interface';
 import { RouteMethod } from './method.enum';
-import { IRouteOptions } from './options.interface';
+import { IRouteOptions, RouteProxyOptions } from './options.interface';
 
 export function generate(
     routeObjects: IRouteOptions | IRouteOptions[],
@@ -17,7 +19,7 @@ export function generate(
     const router = express.Router();
 
     if (!Array.isArray(routeObjects)) {
-        return setupRoute(router, routeObjects,rateLimitDataStore);
+        return setupRoute(router, routeObjects, rateLimitDataStore);
     } else {
         for (const routeObject of routeObjects) {
             setupRoute(router, routeObject, rateLimitDataStore);
@@ -56,32 +58,47 @@ function setupRoute(
         middlewares.push(rateLimiter(routeObject.rateLimit, rateLimitDataStore));
     }
 
-    middlewares.push(async (
-        _: express.Request,
-        res: express.Response,
-        __: express.NextFunction,
-    ): Promise<void> => {
-        try {
-            const controllerOutput: any = await routeObject.controller(res.locals.payload);
+    const controller = routeObject.controller;
+    if (routeObject.proxy && controller) {
+        throw new Error('only one of proxy or controller should be set for a route');
+    }
 
-            if (controllerOutput instanceof FixedResponse) {
-                controllerOutput.express(res);
+    if (!routeObject.proxy && !controller) {
+        throw new Error('exactly one of proxy or controller should be set for routes');
+    }
+
+    if (controller) {
+        middlewares.push(async (
+            _: express.Request,
+            res: express.Response,
+            __: express.NextFunction,
+        ): Promise<void> => {
+            try {
+                const controllerOutput: any = await controller(res.locals.payload);
+
+                if (controllerOutput instanceof FixedResponse) {
+                    controllerOutput.express(res);
+                }
+
+                // if controller already sent the response
+                if (res.headersSent) {
+                    return;
+                }
+
+                return res
+                    .json(controllerOutput)
+                    .end();
+            } catch (error) {
+                const { statusCode, message, metadata } = extractErrorData(error);
+
+                return res.status(statusCode).send({ message, metadata }).end();
             }
+        });
+    }
 
-            // if controller already sent the response
-            if (res.headersSent) {
-                return;
-            }
-
-            return res
-                .json(controllerOutput)
-                .end();
-        } catch (error) {
-            const { statusCode, message, metadata } = extractErrorData(error);
-
-            return res.status(statusCode).send({ message, metadata }).end();
-        }
-    });
+    if (routeObject.proxy) {
+        middlewares.push(setupProxy(routeObject.proxy));
+    }
 
     switch (routeObject.method) {
         case RouteMethod.Get:
@@ -160,7 +177,7 @@ function payloadSetup(
 }
 
 function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
-    return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+    return (_: express.Request, res: express.Response, next: express.NextFunction): void => {
         try {
             res.locals.payload = validateJsonSchema(res.locals.payload, schema);
 
@@ -203,4 +220,44 @@ function rateLimiter(
             return res.status(statusCode).send({ message, metadata }).end();
         }
     };
+}
+
+function setupProxy(proxyOptions: RouteProxyOptions): express.RequestHandler {
+    return async (req: express.Request, res: express.Response, _: express.NextFunction): Promise<void> => {
+        const options: AxiosRequestConfig = {
+            method: proxyOptions.method,
+            responseType: "stream",
+            url: proxyOptions.url(req, res),
+        };
+
+        if (proxyOptions.headers) {
+            options.headers = proxyOptions.headers(req, res);
+        }
+
+        if (proxyOptions.payload) {
+            options.data = proxyOptions.payload(req, res);
+        }
+
+        try {
+            const proxyRes = await Axios(options);
+
+            setProxyResponse(proxyRes, res);
+        } catch (error) {
+            const errorResp: AxiosResponse<any> | undefined = error.response;
+            if (errorResp) {
+                setProxyResponse(errorResp, res);
+            } else {
+                return res.status(500).send({ message: error.message }).end();
+            }
+        }
+    };
+}
+
+function setProxyResponse(proxyRes: AxiosResponse<IncomingMessage>, res: express.Response) {
+    Object.entries(proxyRes.headers || {})
+        .forEach(([key, value]) => { res.setHeader(key, value as string) });
+
+    res.status(proxyRes.status);
+
+    proxyRes.data.pipe(res);
 }
