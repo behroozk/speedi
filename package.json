@@ -1,6 +1,6 @@
 {
   "name": "speedi",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Speedy, all-in-one web application framework",
   "main": "dist/index.js",
   "scripts": {
