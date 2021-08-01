@@ -10,7 +10,7 @@ async function start(): Promise<void> {
             allowedOrigins: [/\.supplyhub\.com$/],
             host: 'localhost',
             logRequests: true,
-            port: 3002,
+            port: Number(process.env.APP_PORT) || 3002,
             protocol: 'http',
         },
         name: 'speedi-test',
@@ -73,17 +73,21 @@ async function start(): Promise<void> {
             }),
         },
         {
-            controller: async ({ email, password }: { email: string, password: string }) => {
+            controller: async ({ email, header, param, password }:
+                { email: string; header: string; param: string; password: string; }) => {
                 return {
+                    header,
+                    param,
                     success: password === "test1234",
                     token: Buffer.from(`${email}:${password}`).toString("base64"),
                 };
             },
-            description: 'test route #3',
+            description: 'test login',
             method: Speedi.RouteMethod.Post,
-            path: '/test3',
+            path: '/login/:email',
             payload: (req) => ({
-                email: req.body.email,
+                email: req.params.email,
+                header: req.header("X-TEST"),
                 password: req.body.password,
             }),
             schema: {
@@ -95,16 +99,32 @@ async function start(): Promise<void> {
                         minLength: 1,
                         type: "string",
                     },
+                    header: { type: "string" },
                     password: { minLength: 1, type: "string" },
                 },
-                required: ["email", "password"],
+                required: ["email", "header", "password"],
+                type: "object",
+            },
+        },
+        {
+            description: 'test proxy',
+            method: Speedi.RouteMethod.Get,
+            path: '/proxy/:email',
+            proxy: {
+                headers: () => ({ 'X-TEST': 'VALUE' }),
+                method: Speedi.RouteMethod.Post,
+                payload: (req) => ({
+                    email: req.params.email,
+                    password: req.body.password,
+                }),
+                url: (req) => `http://127.0.0.1:3002/login/${req.params.email}`,
             },
         },
     ]);
 
     await app.start();
 
-    await app.stop();
+    // await app.stop();
 }
 
 start();
