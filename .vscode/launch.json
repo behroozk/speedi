@@ -19,7 +19,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Test",
-            "program": "${workspaceRoot}/dist/test/test.js",
+            "program": "${workspaceRoot}/test/test.ts",
             "console": "integratedTerminal",
             "outFiles": [
                 "${workspaceRoot}/dist/**/*.js"
