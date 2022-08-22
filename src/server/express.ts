@@ -2,7 +2,7 @@ import * as compression from 'compression';
 import * as Logger from 'console';
 import * as cors from 'cors';
 import * as express from 'express';
-import * as helmet from 'helmet';
+import helmet from 'helmet';
 import * as http from 'http';
 import * as morgan from 'morgan';
 import { DataStore } from '../data_store';

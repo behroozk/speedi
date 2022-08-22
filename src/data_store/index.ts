@@ -34,7 +34,7 @@ export class DataStore {
         return this.client.get(this.prefix + key);
     }
 
-    public set(key: string, value: string): Promise<string> {
+    public set(key: string, value: string): Promise<string | null> {
         return this.client.set(this.prefix + key, value);
     }
 
@@ -70,11 +70,11 @@ export class DataStore {
         return this.client.unshift(this.prefix + list, value);
     }
 
-    public pop(list: string): Promise<string> {
+    public pop(list: string): Promise<string | null> {
         return this.client.pop(this.prefix + list);
     }
 
-    public shift(list: string): Promise<string> {
+    public shift(list: string): Promise<string | null> {
         return this.client.shift(this.prefix + list);
     }
 }

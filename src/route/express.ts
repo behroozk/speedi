@@ -85,13 +85,15 @@ function setupRoute(
                     return;
                 }
 
-                return res
+                res
                     .json(controllerOutput)
                     .end();
-            } catch (error) {
+                return;
+            } catch (error: any) {
                 const { statusCode, message, metadata } = extractErrorData(error);
 
-                return res.status(statusCode).send({ message, metadata }).end();
+                res.status(statusCode).send({ message, metadata }).end();
+                return;
             }
         });
     }
@@ -152,10 +154,11 @@ function runMiddleware(middlware: (req: express.Request, res: express.Response) 
         try {
             await middlware(req, res);
             next();
-        } catch (error) {
+        } catch (error: any) {
             const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(statusCode).send({ message, metadata }).end();
+            res.status(statusCode).send({ message, metadata }).end();
+            return;
         }
     };
 }
@@ -168,10 +171,11 @@ function payloadSetup(
             res.locals.payload = payloadGenerator(req, res);
 
             return next();
-        } catch (error) {
+        } catch (error: any) {
             const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(statusCode).send({ message, metadata }).end();
+            res.status(statusCode).send({ message, metadata }).end();
+            return;
         }
     };
 }
@@ -182,10 +186,11 @@ function payloadValidatorJsonSchema(schema: any): express.RequestHandler {
             res.locals.payload = validateJsonSchema(res.locals.payload, schema);
 
             return next();
-        } catch (error) {
+        } catch (error: any) {
             const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(statusCode).send({ message, metadata }).end();
+            res.status(statusCode).send({ message, metadata }).end();
+            return;
         }
     };
 }
@@ -214,10 +219,11 @@ function rateLimiter(
             }
 
             return next();
-        } catch (error) {
+        } catch (error: any) {
             const { statusCode, message, metadata } = extractErrorData(error);
 
-            return res.status(statusCode).send({ message, metadata }).end();
+            res.status(statusCode).send({ message, metadata }).end();
+            return;
         }
     };
 }
@@ -242,12 +248,13 @@ function setupProxy(proxyOptions: RouteProxyOptions): express.RequestHandler {
             const proxyRes = await Axios(options);
 
             setProxyResponse(proxyRes, res);
-        } catch (error) {
+        } catch (error: any) {
             const errorResp: AxiosResponse<any> | undefined = error.response;
             if (errorResp) {
                 setProxyResponse(errorResp, res);
             } else {
-                return res.status(500).send({ message: error.message }).end();
+                res.status(500).send({ message: error.message }).end();
+                return;
             }
         }
     };

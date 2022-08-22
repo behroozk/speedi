@@ -46,8 +46,8 @@ export async function rateLimit({
             }, responseDelayTime);
         });
 
-    } catch (error) {
-        if (!error.limitExceeded) {
+    } catch (error: unknown) {
+        if (typeof error === "object" && error && !error.hasOwnProperty("limitExceeded")) {
             return null;
         }
 

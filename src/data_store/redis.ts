@@ -1,162 +1,143 @@
 import * as Logger from "console";
-import * as redis from 'redis';
+import * as redis from "redis";
 
 import { Config } from '../config/config';
 import { IDataStoreClient } from './client.interface';
 
 export class RedisClient implements IDataStoreClient {
-    private client: redis.RedisClient | undefined;
+    private client: redis.RedisClientType | undefined;
 
     public async start(): Promise<void> {
         if (this.client) {
             return;
         }
 
-        this.client = redis.createClient(Number(Config.redis.port), Config.redis.host);
-    }
-
-    public stop(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
-
-            this.client.quit(this.callback<void>(resolve, reject));
-            this.client = undefined;
+        this.client = redis.createClient({
+            url: `redis://${Config.redis.host}:${Config.redis.port}`,
         });
     }
 
-    public get(key: string): Promise<string | null> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async stop(): Promise<void> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.get(key, this.callback<string>(resolve, reject));
-        });
+        try {
+            return await this.client.quit();
+        } catch {
+            throw new Error("Unable to close redis client")
+        }
     }
 
-    public set(key: string, value: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async get(key: string): Promise<string | null> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.set(key, value, this.callback<string>(resolve, reject));
-        });
+        try {
+            return await this.client.get(key);
+        } catch {
+            return null;
+        }
     }
 
-    public del(key: string): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async set(key: string, value: string): Promise<string | null> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.del(key, this.callback<boolean>(resolve, reject));
-        });
+        try {
+            return await this.client.set(key, value);
+        } catch {
+            return null;
+        }
     }
 
-    public expire(key: string, seconds: number): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async del(key: string): Promise<boolean> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.expire(key, seconds, this.callback<number>(resolve, reject));
-        });
+        try {
+            return await this.client.del(key) > 0;
+        } catch {
+            return false;
+        }
     }
 
-    public ttl(key: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async expire(key: string, seconds: number): Promise<boolean> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.ttl(key, this.callback<number>(resolve, reject));
-        });
+        try {
+            return await this.client.expire(key, seconds);
+        } catch {
+            return false;
+        }
     }
 
-    public incr(key: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async ttl(key: string): Promise<number> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.incr(key, this.callback<number>(resolve, reject));
-        });
+        return await this.client.ttl(key);
     }
 
-    public decr(key: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async incr(key: string): Promise<number> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.decr(key, this.callback<number>(resolve, reject));
-        });
+        return await this.client.incr(key);
     }
 
-    public slice(list: string, start: number = 0, end: number = -1): Promise<string[]> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async decr(key: string): Promise<number> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.lrange(list, start, end, this.callback<string[]>(resolve, reject));
-        });
+        return await this.client.decr(key);
     }
 
-    public push(list: string, value: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async slice(list: string, start: number = 0, end: number = -1): Promise<string[]> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.rpush(list, value, this.callback<number>(resolve, reject));
-        });
+        return await this.client.lRange(list, start, end);
     }
 
-    public unshift(list: string, value: string): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async push(list: string, value: string): Promise<number> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.lpush(list, value, this.callback<number>(resolve, reject));
-        });
+        return await this.client.rPush(list, value);
     }
 
-    public pop(list: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async unshift(list: string, value: string): Promise<number> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.rpop(list, this.callback<string>(resolve, reject));
-        });
+        return await this.client.lPush(list, value);
     }
 
-    public shift(list: string): Promise<string> {
-        return new Promise((resolve, reject) => {
-            if (!this.client) {
-                return reject("redis client is not initialized");
-            }
+    public async pop(list: string): Promise<string | null> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
 
-            this.client.lpop(list, this.callback<string>(resolve, reject));
-        });
+        return await this.client.rPop(list);
     }
 
-    private callback<T>(
-        resolve: (value?: any) => void,
-        reject: (reason?: any) => void,
-    ): any {
-        return (error: Error | null, response: T) => {
-            if (error) {
-                reject(error);
-                Logger.error(error);
-            } else {
-                resolve(response);
-            }
-        };
+    public async shift(list: string): Promise<string | null> {
+        if (!this.client) {
+            throw new Error("Redis client is not initialized");
+        }
+
+        return await this.client.lPop(list);
     }
 }
